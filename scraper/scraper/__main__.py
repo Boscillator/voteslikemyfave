@@ -3,8 +3,7 @@ import itertools
 from pprint import pprint
 from typing import Iterator
 
-from .source_data_model import parse_roll_call_vote_from_url, RollCallVote
-from .house import scrape_house_starting_at
+from .house import scrape_house_starting_at, RollCallVote
 from .settings import Settings
 
 if __name__ == '__main__':
@@ -12,6 +11,6 @@ if __name__ == '__main__':
   settings = Settings.from_environs()
   pprint(settings)
 
-  votes: Iterator[RollCallVote] = scrape_house_starting_at(settings, 2024, 500)
+  votes: Iterator[RollCallVote] = scrape_house_starting_at(settings, 2025, 1)
   for v in votes:
     pprint(v.vote_metadata) 
