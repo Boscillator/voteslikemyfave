@@ -4,7 +4,7 @@ import os
 
 PREFIX = "VOTE_SCRAPER"
 DEFAULT_HOUSE_URL = "https://clerk.house.gov/evs"
-DEFAULT_CRAWL_DELAY_SECONDS = 0.1
+DEFAULT_CRAWL_DELAY_SECONDS = 0.4
 
 
 @dataclass
