@@ -10,13 +10,13 @@ DEFAULT_CRAWL_DELAY_SECONDS = 0.4
 @dataclass
 class Settings:
     house_url: str
-    crawl_delay_seconds: int
+    crawl_delay_seconds: float
 
     @classmethod
     def from_environs(cls) -> Self:
         return cls(
             house_url=os.environ.get(f"{PREFIX}_HOUSE_URL", DEFAULT_HOUSE_URL),
-            crawl_delay_seconds=int(
+            crawl_delay_seconds=float(
                 os.environ.get(
                     f"{PREFIX}_CRAWL_DELAY_SECONDS", DEFAULT_CRAWL_DELAY_SECONDS
                 )
