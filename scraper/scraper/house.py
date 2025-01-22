@@ -7,10 +7,19 @@ from typing import Iterator, List, Optional, Dict
 from urllib.request import urlopen
 from urllib.error import HTTPError
 
+import scraper.common as common
 from .settings import Settings
 
 
 logger = logging.getLogger(__name__)
+
+def _remove_state_from_name(name: str) -> str:
+    """
+    "Sanders (VT)" -> "Sanders"
+    "Ocasio-Cortez" -> "Ocasio-Cortez"
+    """
+    return name.split(" (")[0]
+
 
 @dataclass
 class Legislator:
@@ -21,12 +30,29 @@ class Legislator:
     state: str
     role: str
 
+    def to_common(self) -> common.Legislator:
+        return common.Legislator(
+            chamber=common.Chamber.HOUSE_OF_REPS,
+            last_name=_remove_state_from_name(self.unaccented_name),
+            party=common.Party(self.party),
+            state=self.state,
+            house_id=self.name_id
+        )
+
 
 @dataclass
 class RecordedVote:
     legislator: Legislator
     vote: str
 
+    def to_common(self) -> common.Vote:
+        return common.Vote(vote=self.vote)
+
+def _parse_session(session: str) -> int:
+    match session:
+        case '1st': return 1
+        case '2nd': return 2
+        case _: raise ValueError(f'Unexpected session {session}. Expected "1st" or "2nd"')
 
 @dataclass
 class VoteMetadata:
@@ -42,12 +68,31 @@ class VoteMetadata:
     action_datetime: datetime.datetime
     vote_desc: Optional[str] = None
 
+    def to_common(self) -> common.RollCall:
+        return common.RollCall(
+            chamber=common.Chamber.HOUSE_OF_REPS,
+            congress=self.congress,
+            session=_parse_session(self.session),
+            when=self.action_datetime,
+            question=self.vote_question
+        )
+
 
 @dataclass
 class RollCallVote:
     vote_metadata: VoteMetadata
     vote_data: List[RecordedVote] = field(default_factory=list)
     source_url: Optional[str] = field(default=None)
+
+    def to_common(self) -> common.RollCallWithVotes:
+        votes = []
+        for vote_data in self.vote_data:
+            votes.append((vote_data.legislator.to_common(), vote_data.to_common()))
+
+        return common.RollCallWithVotes(
+            roll_call=self.vote_metadata.to_common(),
+            votes=votes
+        )
 
 
 def parse_rollcall_vote(xml_doc: str) -> RollCallVote:
@@ -136,7 +181,7 @@ def scrape_single(settings: Settings, year: int, roll_call_number: int) -> RollC
 
 def scrape_house_starting_at(
     settings: Settings, year: int, roll_call_number: int
-) -> Iterator[RollCallVote]:
+) -> Iterator[common.RollCallWithVotes]:
 
     # just used for logging
     num_votes_scraped = 0
@@ -149,7 +194,7 @@ def scrape_house_starting_at(
         try:
             # Get vote
             vote = scrape_single(settings, year, roll_call_number)
-            yield vote
+            yield vote.to_common()
 
             # Reset if there is at least one vote in a year
             error_indicates_empty_year = False
@@ -164,7 +209,7 @@ def scrape_house_starting_at(
             if e.status == 404:
                 logger.info("Reached end of %d with a total of %d votes", year, num_votes_scraped)
                 if error_indicates_empty_year:
-                    logger.debug("Year %d did not have a first vote. Assuming this is the end of the data", year)
+                    logger.debug("Year %d did not have a first vote. Assuming this is the end of the data.", year)
                     break
                 else:
                     year += 1

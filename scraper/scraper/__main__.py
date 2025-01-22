@@ -13,4 +13,4 @@ if __name__ == '__main__':
 
   votes: Iterator[RollCallVote] = scrape_house_starting_at(settings, 2025, 1)
   for v in votes:
-    pprint(v.vote_metadata) 
+    pprint(v) 
