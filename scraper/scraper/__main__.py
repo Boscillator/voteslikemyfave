@@ -5,12 +5,13 @@ from typing import Iterator
 
 from .house import scrape_house_starting_at, RollCallVote
 from .settings import Settings
+from .database import connect, insert_roll_calls_with_votes
 
 if __name__ == '__main__':
   logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
   settings = Settings.from_environs()
-  pprint(settings)
+  driver = connect(settings)
 
-  votes: Iterator[RollCallVote] = scrape_house_starting_at(settings, 2025, 1)
-  for v in votes:
-    pprint(v) 
+  votes: Iterator[RollCallVote] = scrape_house_starting_at(settings, 2025, 19)
+  insert_roll_calls_with_votes(driver, votes)
+

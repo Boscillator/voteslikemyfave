@@ -3,8 +3,6 @@ from enum import Enum
 from typing import Optional, Iterator, Tuple, List
 from datetime import datetime
 
-import scraper.house as house
-
 class Chamber(Enum):
   HOUSE_OF_REPS = 'house'
   SENATE = 'senate'
