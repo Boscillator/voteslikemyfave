@@ -235,7 +235,7 @@ def scrape_senate_starting_at(settings: Settings, congress: int, session: int, v
     
     while True:
         try:
-            logger.debug("Winn attempt to scrape %d-%d-%d", congress, session, vote_number)
+            logger.debug("Will attempt to scrape %d-%d-%d", congress, session, vote_number)
             result = scrape_single_senate_vote(settings, congress, session, vote_number)
             yield result.to_common(member_list)
             error_indicates_empty = False

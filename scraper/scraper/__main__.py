@@ -14,8 +14,8 @@ if __name__ == '__main__':
   settings = Settings.from_environs()
   driver = connect(settings)
 
-  # votes: Iterator[RollCallVote] = scrape_house_starting_at(settings, 2025, 19)
-  # insert_roll_calls_with_votes(driver, votes)
-  for v in scrape_senate_starting_at(settings, 119, 1, 18):
-    pprint(v)
+  votes: Iterator[RollCallVote] = scrape_house_starting_at(settings, 2025, 19)
+  insert_roll_calls_with_votes(driver, votes)
+  vote: Iterator[RollCallVote] = scrape_senate_starting_at(settings, 119, 1, 15)
+  insert_roll_calls_with_votes(driver, votes)
 
