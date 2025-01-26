@@ -36,7 +36,8 @@ class Legislator:
             last_name=_remove_state_from_name(self.unaccented_name),
             party=common.Party(self.party),
             state=self.state,
-            house_id=self.name_id
+            bioguide_id=self.name_id,
+            house_id=self.name_id, 
         )
 
 

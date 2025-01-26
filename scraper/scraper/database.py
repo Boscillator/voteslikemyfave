@@ -52,6 +52,7 @@ def insert_legislator(tx, legislator: Legislator):
         "last_name": legislator.last_name,
         "party": legislator.party.value,
         "state": legislator.state,
+        "bioguide_id": legislator.bioguide_id,
         "id": legislator.id,
     }
 

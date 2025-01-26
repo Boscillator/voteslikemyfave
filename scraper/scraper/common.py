@@ -18,6 +18,7 @@ class Legislator:
   last_name: str
   party: Party
   state: str
+  bioguide_id: str
   senate_id: Optional[str] = field(default=None)
   house_id: Optional[str] = field(default=None)
   first_name: Optional[str] = field(default=None)
@@ -28,10 +29,7 @@ class Legislator:
 
   @property
   def id(self) -> str:
-    if self.chamber == Chamber.HOUSE_OF_REPS:
-      return f"h{self.house_id}"
-    else:
-      return f"s{self.senate_id}"
+    return self.bioguide_id
 
 @dataclass
 class RollCall:
