@@ -26,13 +26,25 @@ class Legislator:
   def full_name(self):
     return f"{self.last_name} ({self.party}-{self.state})"
 
+  @property
+  def id(self) -> str:
+    if self.chamber == Chamber.HOUSE_OF_REPS:
+      return f"h{self.house_id}"
+    else:
+      return f"s{self.senate_id}"
+
 @dataclass
 class RollCall:
   chamber: Chamber
   congress: int
   session: int
+  number: int
   when: datetime
   question: str
+
+  @property
+  def id(self) -> str:
+    return f"{self.chamber}-{self.congress}-{self.session}-{self.number}"
 
 @dataclass
 class Vote:

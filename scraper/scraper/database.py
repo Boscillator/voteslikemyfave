@@ -1,8 +1,9 @@
 from typing import Iterator
 from datetime import datetime
-from .common import RollCallWithVotes
+from dataclasses import asdict
+from .common import RollCallWithVotes, RollCall, Legislator, Vote
 from .settings import Settings
-from neo4j import GraphDatabase
+from neo4j import GraphDatabase, Transaction
 import logging
 
 logger = logging.getLogger(__name__)
@@ -29,74 +30,63 @@ def connect(settings: Settings) -> GraphDatabase:
         logger.error("Failed to initialized neo4j driver: %s", repr(e))
         raise
 
-def filter_non_null_properties(properties: dict) -> dict:
+
+def insert_roll_call_vote(tx: Transaction, roll_call_vote: RollCall):
+    properties = {
+        "chamber": roll_call_vote.chamber.value,
+        "congress": roll_call_vote.congress,
+        "session": roll_call_vote.session,
+        "number": roll_call_vote.number,
+        "when": roll_call_vote.when,
+        "question": roll_call_vote.question,
+        "id": roll_call_vote.id,
+    }
+
+    query = "MERGE (rc: RollCall {id: $id}) ON CREATE SET rc += $properties"
+    tx.run(query, properties=properties, id=roll_call_vote.id)
+
+
+def insert_legislator(tx, legislator: Legislator):
+    properties = {
+        "chamber": legislator.chamber.value,
+        "last_name": legislator.last_name,
+        "party": legislator.party.value,
+        "state": legislator.state,
+        "id": legislator.id,
+    }
+
+    if legislator.senate_id is not None:
+        properties["senate_id"] = legislator.senate_id
+
+    if legislator.house_id is not None:
+        properties["house_id"] = legislator.house_id
+
+    if legislator.first_name is not None:
+        properties["first_name"] = legislator.first_name
+
+    query = "MERGE (l: Legislator {id: $id}) ON CREATE SET l += $properties"
+    tx.run(query, properties=properties, id=legislator.id)
+
+
+def create_relationship_for_legislator_to_vote(
+    tx: Transaction, l: Legislator, roll_call: RollCall, vote: Vote
+):
+    query = """
+        MATCH (l: Legislator {id: $legislator_id}), (r: RollCall {id: $roll_call_id})
+        MERGE (l)-[v:VOTED_ON]->(r)
+        ON CREATE SET v.vote = $vote
     """
-    Filters out None values from a dictionary.
+    tx.run(query, legislator_id=l.id, roll_call_id=roll_call.id, vote=vote.vote)
 
-    Args:
-        properties (dict): The dictionary to filter.
-
-    Returns:
-        dict: A new dictionary with None values removed.
-    """
-    return {k: v for k, v in properties.items() if v is not None}
-
-def build_merge_query(label: str, properties: dict) -> str:
-    """
-    Builds a dynamic MERGE query for a given label and properties.
-
-    Args:
-        label (str): The label of the node.
-        properties (dict): The properties to include in the query.
-
-    Returns:
-        str: A Cypher MERGE query string.
-    """
-    filtered_properties = filter_non_null_properties(properties)
-    return f"MERGE ({label} {{ {', '.join(f'{k}: ${k}' for k in filtered_properties)} }})"
 
 def insert_roll_calls_with_votes(driver, roll_calls: Iterator[RollCallWithVotes]):
     def insert_data(tx, roll_call: RollCallWithVotes):
-        # Create RollCall node
-        roll_call_properties = {
-            "id": f"{roll_call.roll_call.chamber.value}-{roll_call.roll_call.congress}-{roll_call.roll_call.session}-{roll_call.roll_call.when.timestamp()}",
-            "chamber": roll_call.roll_call.chamber.value,
-            "congress": roll_call.roll_call.congress,
-            "session": roll_call.roll_call.session,
-            "when": roll_call.roll_call.when.isoformat(),
-            "question": roll_call.roll_call.question,
-        }
-        roll_call_query = build_merge_query("rc:RollCall", roll_call_properties)
-        tx.run(roll_call_query, **filter_non_null_properties(roll_call_properties))
+        insert_roll_call_vote(tx, roll_call.roll_call)
 
-        for legislator, vote in roll_call.votes:
-            # Prepare Legislator properties
-            legislator_properties = {
-                "id": legislator.senate_id or legislator.house_id or f"{legislator.last_name}-{legislator.state}",
-                "chamber": legislator.chamber.value,
-                "last_name": legislator.last_name,
-                "party": legislator.party.value,
-                "state": legislator.state,
-                "first_name": legislator.first_name,
-                "senate_id": legislator.senate_id,
-                "house_id": legislator.house_id,
-            }
-            legislator_query = build_merge_query("leg:Legislator", legislator_properties)
-            tx.run(legislator_query, **filter_non_null_properties(legislator_properties))
-
-            # Create Vote edge
-            vote_query = (
-                "MATCH (rc:RollCall {id: $roll_call_id}), (leg:Legislator {id: $legislator_id}) "
-                "MERGE (leg)-[v:VOTED {vote: $vote}]->(rc)"
-            )
-            tx.run(
-                vote_query,
-                roll_call_id=roll_call_properties["id"],
-                legislator_id=legislator_properties["id"],
-                vote=vote.vote,
-            )
+        for l, v in roll_call.votes:
+            insert_legislator(tx, l)
+            create_relationship_for_legislator_to_vote(tx, l, roll_call.roll_call, v)
 
     with driver.session() as session:
         for roll_call in roll_calls:
             session.write_transaction(insert_data, roll_call)
-

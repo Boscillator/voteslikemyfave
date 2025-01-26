@@ -73,6 +73,7 @@ class VoteMetadata:
             chamber=common.Chamber.HOUSE_OF_REPS,
             congress=self.congress,
             session=_parse_session(self.session),
+            number=self.rollcall_num,
             when=self.action_datetime,
             question=self.vote_question
         )
