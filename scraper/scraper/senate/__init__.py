@@ -262,7 +262,7 @@ def scrape_senate_starting_at(settings: Settings, congress: int, session: int, v
                     session = 1
                     logger.debug("Moving to the %dth congress, session 1", congress)
 
-def find_resume_point_for_senate(settings: Settings, driver: GraphDatabase) -> Optional[Tuple[int,int,int]]:
+def find_resume_point_for_senate(settings: Settings, driver: GraphDatabase) -> Tuple[int,int,int]:
     records, summary, keys = driver.execute_query("""
     MATCH (rc: RollCall)
     WHERE rc.chamber = 'senate'
@@ -278,7 +278,7 @@ def find_resume_point_for_senate(settings: Settings, driver: GraphDatabase) -> O
         return settings.resume_congress, 1, 1
 
     last_vote = records[0].data()['rc']
-    return last_vote['congress'], last_vote['session'], last_vote['number']
+    return last_vote['congress'], last_vote['session'], last_vote['number'] + 1
 
 def scrape_senate(settings: Settings, driver: GraphDatabase):
     year, session, vote_number = find_resume_point_for_senate(settings, driver)

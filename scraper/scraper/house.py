@@ -3,11 +3,14 @@ import xml.etree.ElementTree as ET
 import datetime
 from dataclasses import dataclass, field
 from time import sleep
-from typing import Iterator, List, Optional, Dict
+from typing import Iterator, List, Optional, Dict, Tuple
 from urllib.request import urlopen
 from urllib.error import HTTPError
 
+from neo4j import GraphDatabase
+
 import scraper.common as common
+from .database import insert_roll_calls_with_votes
 from .settings import Settings
 
 
@@ -227,3 +230,26 @@ def scrape_house_starting_at(
                     year,
                     roll_call_number,
                 )
+
+def find_resume_point_for_house(settings: Settings, driver: GraphDatabase) -> Tuple[int,int]:
+    records, summary, keys = driver.execute_query("""
+        MATCH (rc:RollCall)
+        WHERE rc.chamber = 'house'
+        ORDER BY
+            rc.when.year DESC
+            , rc.number DESC
+        LIMIT 1
+        RETURN rc
+    """)
+
+    if len(records) == 0:
+        return settings.resume_year, 1
+
+    last_vote = records[0].data()['rc']
+    return last_vote['when'].year, last_vote['number'] + 1
+
+
+def scrape_house(settings: Settings, driver: GraphDatabase):
+    year, vote_number = find_resume_point_for_house(settings, driver)
+    votes = scrape_house_starting_at(settings, year, vote_number)
+    insert_roll_calls_with_votes(driver, votes)
