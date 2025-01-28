@@ -1,5 +1,5 @@
-from dataclasses import dataclass, field
-from typing import Self
+from dataclasses import dataclass
+from typing import Optional, Self
 import os
 import logging
 
@@ -24,7 +24,7 @@ class Settings:
     senate_url: str
     neo4j_uri: str
     neo4j_username: str
-    neo4j_password: str
+    neo4j_password: Optional[str]
     resume_year: int
     resume_congress: int
     log_level: int

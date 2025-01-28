@@ -3,11 +3,11 @@ import xml.etree.ElementTree as ET
 import datetime
 from dataclasses import dataclass, field
 from time import sleep
-from typing import Iterator, List, Optional, Dict, Tuple
+from typing import Iterator, List, Optional, Dict, Tuple, no_type_check
 from urllib.request import urlopen
 from urllib.error import HTTPError
 
-from neo4j import GraphDatabase
+from neo4j import Driver
 
 import scraper.common as common
 from .database import insert_roll_calls_with_votes
@@ -100,11 +100,14 @@ class RollCallVote:
         )
 
 
+@no_type_check  # not going to try and typecheck chat-gpt generated code. It's probably fine
 def parse_rollcall_vote(xml_doc: str) -> RollCallVote:
     root = ET.fromstring(xml_doc)
 
     # Parse vote-metadata
     metadata_elem = root.find("vote-metadata")
+    if metadata_elem is None:
+        raise ValueError("No vote metadata")
 
     # Parse action date and time
     action_datetime = parse_action_datetime(metadata_elem)
@@ -231,7 +234,7 @@ def scrape_house_starting_at(
                     roll_call_number,
                 )
 
-def find_resume_point_for_house(settings: Settings, driver: GraphDatabase) -> Tuple[int,int]:
+def find_resume_point_for_house(settings: Settings, driver: Driver) -> Tuple[int,int]:
     records, summary, keys = driver.execute_query("""
         MATCH (rc:RollCall)
         WHERE rc.chamber = 'house'
@@ -249,7 +252,7 @@ def find_resume_point_for_house(settings: Settings, driver: GraphDatabase) -> Tu
     return last_vote['when'].year, last_vote['number'] + 1
 
 
-def scrape_house(settings: Settings, driver: GraphDatabase):
+def scrape_house(settings: Settings, driver: Driver):
     year, vote_number = find_resume_point_for_house(settings, driver)
     votes = scrape_house_starting_at(settings, year, vote_number)
     insert_roll_calls_with_votes(driver, votes)

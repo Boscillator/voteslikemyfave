@@ -3,13 +3,13 @@ from datetime import datetime
 from dataclasses import asdict
 from .common import RollCallWithVotes, RollCall, Legislator, Vote
 from .settings import Settings
-from neo4j import GraphDatabase, Transaction
+from neo4j import GraphDatabase, Transaction, Driver
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-def connect(settings: Settings) -> GraphDatabase:
+def connect(settings: Settings) -> Driver:
     """
     Create and return a Neo4j driver instance using the provided settings.
 
@@ -20,6 +20,11 @@ def connect(settings: Settings) -> GraphDatabase:
         neo4j.Driver: An instance of the Neo4j driver.
     """
     logger.debug('Attempting to connect to neo4j at "%s"', settings.neo4j_uri)
+
+    if settings.neo4j_password is None:
+        logger.error("No password provided to database. Please set VOTE_SCRAPER_NEO4J_PASSWORD enviroment variable")
+        raise ValueError("No database password set")
+
     try:
         driver = GraphDatabase.driver(
             settings.neo4j_uri, auth=(settings.neo4j_username, settings.neo4j_password)

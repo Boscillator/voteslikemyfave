@@ -1,13 +1,13 @@
 from dataclasses import dataclass, field
 from pprint import pprint
-from typing import List, Optional, Tuple, Iterator
+from typing import List, Optional, Tuple, Iterator, no_type_check
 from urllib.request import urlopen
 from time import sleep
 import xml.etree.ElementTree as ET
 import logging
 from datetime import datetime
 
-from neo4j import GraphDatabase
+from neo4j import Driver
 
 import scraper.common as common
 
@@ -125,6 +125,7 @@ class RollCallVote:
         )
 
 
+@no_type_check # not going to type-check chat-gpt generated code
 def parse_roll_call_vote(xml_string: str) -> RollCallVote:
     root = ET.fromstring(xml_string)
 
@@ -224,7 +225,7 @@ def scrape_single_senate_vote(
     url = _construct_senate_url(settings.senate_url, congress, session, vote_number)
     with urlopen(url) as response:
         raw: str= response.read()
-        if b'DOCTYPE html' in raw:
+        if 'DOCTYPE html' in raw:
             # Despite Al-Gore having invented the internet, the senate does not know what a 404 error is
             # we detect the error page and raise an exception
             raise VoteNoteFoundException("Unable to find vote")
@@ -265,7 +266,7 @@ def scrape_senate_starting_at(settings: Settings, congress: int, session: int, v
                     session = 1
                     logger.debug("Moving to the %dth congress, session 1", congress)
 
-def find_resume_point_for_senate(settings: Settings, driver: GraphDatabase) -> Tuple[int,int,int]:
+def find_resume_point_for_senate(settings: Settings, driver: Driver) -> Tuple[int,int,int]:
     records, summary, keys = driver.execute_query("""
     MATCH (rc: RollCall)
     WHERE rc.chamber = 'senate'
@@ -283,7 +284,7 @@ def find_resume_point_for_senate(settings: Settings, driver: GraphDatabase) -> T
     last_vote = records[0].data()['rc']
     return last_vote['congress'], last_vote['session'], last_vote['number'] + 1
 
-def scrape_senate(settings: Settings, driver: GraphDatabase):
+def scrape_senate(settings: Settings, driver: Driver):
     year, session, vote_number = find_resume_point_for_senate(settings, driver)
     votes = scrape_senate_starting_at(settings, year, session, vote_number)
     insert_roll_calls_with_votes(driver, votes)
