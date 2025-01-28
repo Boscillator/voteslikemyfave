@@ -7,10 +7,13 @@ import xml.etree.ElementTree as ET
 import logging
 from datetime import datetime
 
+from neo4j import GraphDatabase
+
 import scraper.common as common
 
 from ..settings import Settings
 from .member_list import MemberList, fetch_member_list
+from ..database import insert_roll_calls_with_votes
 
 logger = logging.getLogger(__name__)
 
@@ -258,3 +261,26 @@ def scrape_senate_starting_at(settings: Settings, congress: int, session: int, v
                     congress += 1
                     session = 1
                     logger.debug("Moving to the %dth congress, session 1", congress)
+
+def find_resume_point_for_senate(settings: Settings, driver: GraphDatabase) -> Optional[Tuple[int,int,int]]:
+    records, summary, keys = driver.execute_query("""
+    MATCH (rc: RollCall)
+    WHERE rc.chamber = 'senate'
+    ORDER BY
+        rc.congress DESC
+        , rc.session DESC
+        , rc.number DESC
+    LIMIT 1
+    RETURN rc
+    """)
+
+    if len(records) == 0:
+        return settings.resume_congress, 1, 1
+
+    last_vote = records[0].data()['rc']
+    return last_vote['congress'], last_vote['session'], last_vote['number']
+
+def scrape_senate(settings: Settings, driver: GraphDatabase):
+    year, session, vote_number = find_resume_point_for_senate(settings, driver)
+    votes = scrape_senate_starting_at(settings, year, session, vote_number)
+    insert_roll_calls_with_votes(driver, votes)

@@ -11,7 +11,8 @@ DEFAULT_SENATE_URL = "https://www.senate.gov/legislative/LIS/roll_call_votes"
 DEFAULT_CRAWL_DELAY_SECONDS = 0.4
 DEFAULT_NEO4J_URI = "neo4j://localhost:7687"
 DEFAULT_NEO4J_USERNAME = "neo4j"
-
+DEFAULT_RESUME_YEAR = 2025
+DEFAULT_RESUME_CONGRESS = 119
 
 @dataclass
 class Settings:
@@ -22,6 +23,8 @@ class Settings:
     neo4j_uri: str
     neo4j_username: str
     neo4j_password: str
+    resume_year: int
+    resume_congress: int
 
     @classmethod
     def from_environs(cls) -> Self:
@@ -41,4 +44,6 @@ class Settings:
                 f"{PREFIX}_NEO4J_USERNAME", DEFAULT_NEO4J_USERNAME
             ),
             neo4j_password=os.environ.get(f"{PREFIX}_NEO4J_PASSWORD"),
+            resume_year=int(os.environ.get(f'{PREFIX}_RESUME_YEAR', DEFAULT_RESUME_YEAR)),
+            resume_congress=int(os.environ.get(f'{PREFIX}_RESUME_CONGRESS', DEFAULT_RESUME_CONGRESS))
         )

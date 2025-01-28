@@ -42,7 +42,7 @@ class RollCall:
 
   @property
   def id(self) -> str:
-    return f"{self.chamber}-{self.congress}-{self.session}-{self.number}"
+    return f"{self.chamber.value}-{self.congress}-{self.session}-{self.number}"
 
 @dataclass
 class Vote:
