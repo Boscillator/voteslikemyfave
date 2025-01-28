@@ -67,9 +67,10 @@ class Member:
     ) -> Tuple[common.Legislator, common.Vote]:
         try:
             member_info = member_list.members[self.member_full]
+            bioguide_id = member_info.bioguide_id
         except KeyError as e:
             logger.error('Unable to find "%s" in member list', self.member_full)
-            raise
+            bioguide_id = f'unknown-{self.last_name}-{self.first_name}-{self.party}-{self.state}'
 
         legislator = common.Legislator(
             chamber=common.Chamber.SENATE,
@@ -77,7 +78,7 @@ class Member:
             first_name=self.first_name,
             party=common.Party(self.party),
             state=self.state,
-            bioguide_id=member_info.bioguide_id,
+            bioguide_id=bioguide_id,
             senate_id=self.lis_member_id,
         )
         vote = common.Vote(vote=self.vote_cast)

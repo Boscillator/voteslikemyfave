@@ -10,8 +10,8 @@ from .settings import Settings
 from .database import connect, insert_roll_calls_with_votes
 
 if __name__ == '__main__':
-  logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
   settings = Settings.from_environs()
+  logging.basicConfig(level=logging.INFO)
   driver = connect(settings)
 
 

@@ -17,3 +17,7 @@ python -m scraper
 | `VOTE_SCRAPER_NEO4J_PASSWORD` | Password to connect to database with | NONE |
 | `VOTE_SCRAPER_RESUME_YEAR` | If database is empty, year to start scraping house votes at | 2025 |
 | `VOTE_SCRAPER_RESUME_CONGRESS` | If database is empty, congress to start scraping senate votes at | 119 |
+
+## Requirements
+- neo4j
+- unidecode

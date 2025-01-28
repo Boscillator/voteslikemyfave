@@ -73,7 +73,8 @@ def create_relationship_for_legislator_to_vote(
     tx: Transaction, l: Legislator, roll_call: RollCall, vote: Vote
 ):
     query = """
-        MERGE (l: Legislator {id: $legislator_id})-[v: VOTED_ON]->(r: RollCall {id: $roll_call_id})
+        MATCH (l: Legislator {id: $legislator_id}), (r: RollCall {id: $roll_call_id})
+        MERGE (l)-[v:VOTED_ON]->(r)
         ON CREATE SET v.vote = $vote
     """
     tx.run(query, legislator_id=l.id, roll_call_id=roll_call.id, vote=vote.vote)
