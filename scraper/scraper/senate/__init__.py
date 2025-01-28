@@ -69,7 +69,7 @@ class Member:
             member_info = member_list.members[self.member_full]
             bioguide_id = member_info.bioguide_id
         except KeyError as e:
-            logger.error('Unable to find "%s" in member list', self.member_full)
+            logger.warning('Unable to find "%s" in member list', self.member_full)
             bioguide_id = f'unknown-{self.last_name}-{self.first_name}-{self.party}-{self.state}'
 
         legislator = common.Legislator(
