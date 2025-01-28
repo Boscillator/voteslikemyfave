@@ -235,6 +235,7 @@ def scrape_senate_starting_at(settings: Settings, congress: int, session: int, v
     member_list = fetch_member_list(settings)
 
     error_indicates_empty = True
+    num_votes = 0
     
     while True:
         try:
@@ -243,11 +244,12 @@ def scrape_senate_starting_at(settings: Settings, congress: int, session: int, v
             yield result.to_common(member_list)
             error_indicates_empty = False
             vote_number += 1
+            num_votes += 1
             sleep(settings.crawl_delay_seconds)
         except VoteNoteFoundException as e:
             if error_indicates_empty:
                 # First element does not exist; stop scraping
-                logger.debug("First vote of the %dth congress, session %d was not found. Done!", congress, session)
+                logger.info("First vote of the %dth congress, session %d was not found. Done! Total of %d votes", congress, session, num_votes)
                 break
             else:
                 # Try to move to next set of votes
