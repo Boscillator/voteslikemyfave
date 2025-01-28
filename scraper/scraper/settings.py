@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Self
 import os
+import logging
 
 PREFIX = "VOTE_SCRAPER"
 DEFAULT_HOUSE_URL = "https://clerk.house.gov/evs"
@@ -13,6 +14,7 @@ DEFAULT_NEO4J_URI = "neo4j://localhost:7687"
 DEFAULT_NEO4J_USERNAME = "neo4j"
 DEFAULT_RESUME_YEAR = 2025
 DEFAULT_RESUME_CONGRESS = 119
+DEFAULT_LOG_LEVEL = 'INFO'
 
 @dataclass
 class Settings:
@@ -25,6 +27,7 @@ class Settings:
     neo4j_password: str
     resume_year: int
     resume_congress: int
+    log_level: int
 
     @classmethod
     def from_environs(cls) -> Self:
@@ -45,5 +48,6 @@ class Settings:
             ),
             neo4j_password=os.environ.get(f"{PREFIX}_NEO4J_PASSWORD"),
             resume_year=int(os.environ.get(f'{PREFIX}_RESUME_YEAR', DEFAULT_RESUME_YEAR)),
-            resume_congress=int(os.environ.get(f'{PREFIX}_RESUME_CONGRESS', DEFAULT_RESUME_CONGRESS))
+            resume_congress=int(os.environ.get(f'{PREFIX}_RESUME_CONGRESS', DEFAULT_RESUME_CONGRESS)),
+            log_level=getattr(logging, os.environ.get(f'{PREFIX}_LOG_LEVEL', DEFAULT_LOG_LEVEL))
         )
