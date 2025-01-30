@@ -79,7 +79,8 @@ class VoteMetadata:
             session=_parse_session(self.session),
             number=self.rollcall_num,
             when=self.action_datetime,
-            question=self.vote_question
+            question=self.vote_question,
+            concerning=self.legis_num
         )
 
 
@@ -246,7 +247,7 @@ def find_resume_point_for_house(settings: Settings, driver: Driver) -> Tuple[int
     """)
 
     if len(records) == 0:
-        return settings.resume_year, 1
+        return settings.resume_year, settings.resume_vote
 
     last_vote = records[0].data()['rc']
     return last_vote['when'].year, last_vote['number'] + 1

@@ -14,6 +14,7 @@ DEFAULT_NEO4J_URI = "neo4j://localhost:7687"
 DEFAULT_NEO4J_USERNAME = "neo4j"
 DEFAULT_RESUME_YEAR = 2025
 DEFAULT_RESUME_CONGRESS = 119
+DEFAULT_RESUME_VOTE = 1
 DEFAULT_LOG_LEVEL = 'INFO'
 
 @dataclass
@@ -27,6 +28,7 @@ class Settings:
     neo4j_password: Optional[str]
     resume_year: int
     resume_congress: int
+    resume_vote: int
     log_level: int
 
     @classmethod
@@ -49,5 +51,6 @@ class Settings:
             neo4j_password=os.environ.get(f"{PREFIX}_NEO4J_PASSWORD"),
             resume_year=int(os.environ.get(f'{PREFIX}_RESUME_YEAR', DEFAULT_RESUME_YEAR)),
             resume_congress=int(os.environ.get(f'{PREFIX}_RESUME_CONGRESS', DEFAULT_RESUME_CONGRESS)),
+            resume_vote=int(os.environ.get(f'{PREFIX}_RESUME_VOTE', DEFAULT_RESUME_VOTE)),
             log_level=getattr(logging, os.environ.get(f'{PREFIX}_LOG_LEVEL', DEFAULT_LOG_LEVEL))
         )

@@ -39,6 +39,7 @@ class RollCall:
   number: int
   when: datetime
   question: str
+  concerning: str
 
   @property
   def id(self) -> str:

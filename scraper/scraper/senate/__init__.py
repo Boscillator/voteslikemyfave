@@ -118,6 +118,7 @@ class RollCallVote:
             number=self.vote_number,
             when=self.vote_date,
             question=self.question,
+            concerning=self.document.document_number
         )
 
         return common.RollCallWithVotes(
@@ -224,8 +225,8 @@ def scrape_single_senate_vote(
 ) -> RollCallVote:
     url = _construct_senate_url(settings.senate_url, congress, session, vote_number)
     with urlopen(url) as response:
-        raw: str= response.read()
-        if 'DOCTYPE html' in raw:
+        raw: bytes = response.read()
+        if b'DOCTYPE html' in raw:
             # Despite Al-Gore having invented the internet, the senate does not know what a 404 error is
             # we detect the error page and raise an exception
             raise VoteNoteFoundException("Unable to find vote")
@@ -279,7 +280,7 @@ def find_resume_point_for_senate(settings: Settings, driver: Driver) -> Tuple[in
     """)
 
     if len(records) == 0:
-        return settings.resume_congress, 1, 1
+        return settings.resume_congress, 1, settings.resume_vote
 
     last_vote = records[0].data()['rc']
     return last_vote['congress'], last_vote['session'], last_vote['number'] + 1
