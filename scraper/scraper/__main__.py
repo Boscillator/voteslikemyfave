@@ -1,10 +1,17 @@
 import json
-from .bioguide import BioguideEntry
+import glob
+from .bioguide import BioguideEntry, PoliticianData
 from pprint import pprint
 
 if __name__ == '__main__':
-  with open('examples/sanders_bioguide.json') as f:
-    data = json.load(f)
+  for p in glob.glob('/home/fred/Downloads/BioguideProfiles/*.json'):
+    with open(p) as f:
+      data = json.load(f)
 
-  bernie = BioguideEntry(**data)
-  pprint(bernie.data.image) 
+      print(p)
+      if 'data' in data:
+        entry = BioguideEntry(**data)
+      else:
+        entry = BioguideEntry(data=PoliticianData(**data))
+
+      print(entry.data.familyName);
