@@ -1,78 +1,64 @@
-from dataclasses import dataclass
-from pprint import pprint
+from pydantic import BaseModel, HttpUrl
 from typing import List, Optional
-import json
 
-@dataclass
-class Image:
-    contentUrl: str
-    caption: str
+class Image(BaseModel):
+    contentUrl: HttpUrl
+    caption: Optional[str]
     name: str
 
-@dataclass
-class Asset:
+class Asset(BaseModel):
     name: str
     assetType: str
-    contentUrl: str
-    creditLine: str
-    associatedEntity: List[str]
+    contentUrl: HttpUrl
+    creditLine: Optional[str]
     usageRight: List[str]
     uploadDate: str
     uploadDateISO: str
 
-@dataclass
-class Party:
+class PartyAffiliation(BaseModel):
     name: str
 
-@dataclass
-class Congress:
+class Congress(BaseModel):
     name: str
     congressNumber: int
     congressType: str
     startDate: str
-    endDate: Optional[str] = None
+    endDate: Optional[str]
 
-@dataclass
-class CongressAffiliation:
+class Represents(BaseModel):
+    regionType: str
+    regionCode: str
+
+class CongressAffiliation(BaseModel):
     congress: Congress
-    partyAffiliation: List[Party]
-    caucusAffiliation: List[Party]
-    represents: dict
+    partyAffiliation: List[PartyAffiliation]
+    represents: Represents
 
-@dataclass
-class Job:
+class Job(BaseModel):
     name: str
     jobType: str
 
-@dataclass
-class JobPosition:
+class JobPosition(BaseModel):
     job: Job
     congressAffiliation: CongressAffiliation
-    startDate: Optional[str] = None
-    endDate: Optional[str] = None
     startCirca: Optional[bool] = False
     endCirca: Optional[bool] = False
 
-@dataclass
-class CreativeWork:
+class CreativeWork(BaseModel):
     freeFormCitationText: str
-    name: Optional[str] = None
 
-@dataclass
-class RecordLocation:
+class ResearchRecordLocation(BaseModel):
     name: str
-    location: dict
-    parentRecordLocation: Optional[dict] = None
+    addressLocality: str
+    addressRegion: str
 
-@dataclass
-class ResearchRecord:
+class ResearchRecord(BaseModel):
     name: str
     recordType: List[str]
-    recordLocation: RecordLocation
-    description: Optional[str] = None
+    recordLocation: ResearchRecordLocation
+    description: Optional[str]
 
-@dataclass
-class CongressPerson:
+class PoliticianData(BaseModel):
     usCongressBioId: str
     familyName: str
     givenName: str
@@ -83,45 +69,13 @@ class CongressPerson:
     birthDateUnknown: bool
     deathCirca: bool
     deathDateUnknown: bool
-    profileText: str
-    deleted: bool
     image: List[Image]
-    relationship: List[str]
+    profileText: str
     asset: List[Asset]
     jobPositions: List[JobPosition]
     creativeWork: List[CreativeWork]
     researchRecord: List[ResearchRecord]
+    deleted: bool
 
-def parse_json_to_dataclass(file_path: str) -> CongressPerson:
-    with open(file_path, 'r') as f:
-        data = json.load(f)['data']
-        pprint(data)
-    
-    data['image'] = [Image(**img) for img in data.get('image', [])]
-    data['asset'] = [Asset(**asset) for asset in data.get('asset', [])]
-    data['jobPositions'] = [
-        JobPosition(
-            job=Job(**jp['job']),
-            congressAffiliation=CongressAffiliation(
-                congress=Congress(**jp['congressAffiliation']['congress']),
-                partyAffiliation=[Party(name=p['party']['name']) for p in jp['congressAffiliation'].get('partyAffiliation', [])],
-                caucusAffiliation=[Party(name=p['party']['name']) for p in jp['congressAffiliation'].get('caucusAffiliation', [])],
-                represents=jp['congressAffiliation'].get('represents', {})
-            ),
-            startDate=jp.get('startDate'),
-            endDate=jp.get('endDate'),
-            startCirca=jp.get('startCirca', False),
-            endCirca=jp.get('endCirca', False)
-        ) for jp in data.get('jobPositions', [])
-    ]
-    data['creativeWork'] = [CreativeWork(**cw) for cw in data.get('creativeWork', [])]
-    data['researchRecord'] = [
-        ResearchRecord(
-            name=rr['name'],
-            recordType=rr['recordType'],
-            description=rr.get('description'),
-            recordLocation=RecordLocation(**rr['recordLocation'])
-        ) for rr in data.get('researchRecord', [])
-    ]
-    
-    return CongressPerson(**data)
+class DataWrapper(BaseModel):
+    data: PoliticianData
