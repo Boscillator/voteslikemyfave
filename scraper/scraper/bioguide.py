@@ -2,28 +2,31 @@ from pydantic import BaseModel, HttpUrl
 from typing import List, Optional
 
 class Image(BaseModel):
-    contentUrl: HttpUrl
+    contentUrl: str
     caption: Optional[str]
     name: str
 
 class Asset(BaseModel):
     name: str
     assetType: str
-    contentUrl: HttpUrl
+    contentUrl: str
     creditLine: Optional[str]
     usageRight: List[str]
     uploadDate: str
     uploadDateISO: str
 
-class PartyAffiliation(BaseModel):
+class Party(BaseModel):
     name: str
+
+class PartyAffiliation(BaseModel):
+    party: Party
 
 class Congress(BaseModel):
     name: str
     congressNumber: int
     congressType: str
     startDate: str
-    endDate: Optional[str]
+    endDate: Optional[str] = None
 
 class Represents(BaseModel):
     regionType: str
@@ -49,14 +52,14 @@ class CreativeWork(BaseModel):
 
 class ResearchRecordLocation(BaseModel):
     name: str
-    addressLocality: str
-    addressRegion: str
+    addressLocality: Optional[str] = None
+    addressRegion: Optional[str] = None
 
 class ResearchRecord(BaseModel):
     name: str
     recordType: List[str]
     recordLocation: ResearchRecordLocation
-    description: Optional[str]
+    description: Optional[str] = None
 
 class PoliticianData(BaseModel):
     usCongressBioId: str
@@ -77,5 +80,5 @@ class PoliticianData(BaseModel):
     researchRecord: List[ResearchRecord]
     deleted: bool
 
-class DataWrapper(BaseModel):
+class BioguideEntry(BaseModel):
     data: PoliticianData
