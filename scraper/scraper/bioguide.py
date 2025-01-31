@@ -190,6 +190,26 @@ def insert_bioguide_entry(tx: Transaction, entry: BioguideEntry):
         """
         tx.run(query, bioguide_id=legislator.bioguide_id, congress=congress.model_dump(exclude_none=True), membership=is_member_of_congress.model_dump(exclude_none=True))
 
+        for party_affiliation in job.congressAffiliation.partyAffiliation:
+           party = models.Party(
+               name=party_affiliation.party.name,
+               abbreviation=models.Party.name_to_abbreviation(party_affiliation.party.name)
+           )
+
+           is_member_of_party = models.IsMemberOfParty()
+
+           query = """
+                MATCH (self: Legislator {bioguide_id: $bioguide_id})
+                MERGE (party: Party {name: $party.name})
+                ON CREATE
+                    SET party = $party
+                MERGE (self)-[m: IS_MEMBER_OF_PARTY]->(party)
+                ON CREATE
+                    SET m = $membership
+            """
+           tx.run(query, bioguide_id=legislator.bioguide_id, party=party.model_dump(exclude_none=True), membership=is_member_of_party.model_dump(exclude_none=True))
+
+
 def insert_bioguide_file(path: str, session: Session):
     with open(path) as f:
         data = json.load(f)
@@ -214,5 +234,10 @@ def insert_all_legislators(glob_pattern: str, driver: Driver):
                     FOR (c: Congress)
                     REQUIRE c.number IS UNIQUE
         """)
+        session.run("""CREATE CONSTRAINT party_name_unique IF NOT EXISTS
+                    FOR (p: Party)
+                    REQUIRE p.name IS UNIQUE
+        """)
+
         for file in files:
             insert_bioguide_file(file, session)

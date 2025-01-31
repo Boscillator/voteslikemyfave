@@ -36,6 +36,18 @@ class Party(BaseModel):
   name: str
   abbreviation: Optional[str]
 
+  @staticmethod
+  def name_to_abbreviation(name: str) -> Optional[str]:
+    match name:
+      case 'Republican':
+        return 'R'
+      case 'Democrat':
+        return 'D'
+      case 'Independent':
+        return 'I'
+      case _:
+        return None
+
 class IsMemberOfParty(BaseModel):
   pass
 
