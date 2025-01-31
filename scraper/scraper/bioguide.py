@@ -167,6 +167,29 @@ def insert_bioguide_entry(tx: Transaction, entry: BioguideEntry):
         """
         tx.run(query, bioguide_id=legislator.bioguide_id, relative_id=relation.relatedTo.usCongressBioId, is_related_to=is_related_to.model_dump(exclude_none=True))
 
+    for job in entry.data.jobPositions:
+        if job.congressAffiliation.congress is None:
+            continue
+
+        is_member_of_congress = models.IsMemberOfCongress(
+            parties=[party.party.name for party in job.congressAffiliation.partyAffiliation]
+        )
+        congress = models.Congress(
+            number=job.congressAffiliation.congress.congressNumber,
+            start_date=job.congressAffiliation.congress.startDate,
+            end_date=job.congressAffiliation.congress.endDate
+        )
+        query="""
+            MATCH (self: Legislator {bioguide_id: $bioguide_id})
+            MERGE (congress: Congress {number: $congress.number})
+            ON CREATE
+                SET congress = $congress
+            MERGE (self)-[m: IS_MEMBER_OF_CONGRESS]->(congress)
+            ON CREATE
+                SET m = $membership
+        """
+        tx.run(query, bioguide_id=legislator.bioguide_id, congress=congress.model_dump(exclude_none=True), membership=is_member_of_congress.model_dump(exclude_none=True))
+
 def insert_bioguide_file(path: str, session: Session):
     with open(path) as f:
         data = json.load(f)
@@ -186,6 +209,10 @@ def insert_all_legislators(glob_pattern: str, driver: Driver):
         session.run("""CREATE CONSTRAINT legislator_bioguide_id_unique IF NOT EXISTS
                     FOR (l: Legislator)
                     REQUIRE l.bioguide_id IS UNIQUE
+        """)
+        session.run("""CREATE CONSTRAINT congress_number_unique IF NOT EXISTS
+                    FOR (c: Congress)
+                    REQUIRE c.number IS UNIQUE
         """)
         for file in files:
             insert_bioguide_file(file, session)

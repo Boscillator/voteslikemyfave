@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 from datetime import date
 
@@ -26,16 +26,16 @@ class IsRelatedTo(BaseModel):
 
 class Congress(BaseModel):
   number: int
-  start_date: date
-  end_date: date
+  start_date: Optional[date] = None
+  end_date: Optional[date] = None
 
-class CongressAffiliation(BaseModel):
-  last_party: Optional[str]
+class IsMemberOfCongress(BaseModel):
+  parties: List[str]
 
 class Party(BaseModel):
   name: str
   abbreviation: Optional[str]
 
-class PartyAffiliation(BaseModel):
+class IsMemberOfParty(BaseModel):
   pass
 
