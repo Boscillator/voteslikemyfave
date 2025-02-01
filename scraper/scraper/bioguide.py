@@ -188,7 +188,30 @@ def insert_bioguide_entry(tx: Transaction, entry: BioguideEntry):
             ON CREATE
                 SET m = $membership
         """
-        tx.run(query, bioguide_id=legislator.bioguide_id, congress=congress.model_dump(exclude_none=True), membership=is_member_of_congress.model_dump(exclude_none=True))
+        tx.run(query,
+            bioguide_id=legislator.bioguide_id,
+            congress=congress.model_dump(exclude_none=True),
+            membership=is_member_of_congress.model_dump(exclude_none=True),
+        )
+
+        if job.congressAffiliation is not None and job.congressAffiliation.represents is not None:
+            state = models.State(code=job.congressAffiliation.represents.regionCode)
+            represents = models.Represents()
+            query="""
+                MATCH (self: Legislator {bioguide_id: $bioguide_id})
+                MERGE (state: State {code: $state.code})
+                ON CREATE
+                    SET state = $state
+                MERGE (self)-[r: REPRESENTS]->(state)
+                ON CREATE
+                    SET r = $represents
+            """
+            tx.run(query,
+                bioguide_id=legislator.bioguide_id,
+                state=state.model_dump(exclude_none=True),
+                represents=represents.model_dump(exclude_none=True)
+            )
+
 
         for party_affiliation in job.congressAffiliation.partyAffiliation:
            party = models.Party(
@@ -237,6 +260,10 @@ def insert_all_legislators(glob_pattern: str, driver: Driver):
         session.run("""CREATE CONSTRAINT party_name_unique IF NOT EXISTS
                     FOR (p: Party)
                     REQUIRE p.name IS UNIQUE
+        """)
+        session.run("""CREATE CONSTRAINT state_code_unique IF NOT EXISTS
+                    FOR (s: State)
+                    REQUIRE s.code IS UNIQUE
         """)
 
         for file in files:

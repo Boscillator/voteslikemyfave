@@ -1,6 +1,7 @@
+from enum import Enum
 from typing import Optional, List
 from pydantic import BaseModel
-from datetime import date
+from datetime import date, datetime
 
 class Legislator(BaseModel):
   bioguide_id: str
@@ -50,4 +51,25 @@ class Party(BaseModel):
 
 class IsMemberOfParty(BaseModel):
   pass
+
+class State(BaseModel):
+  code: str
+
+class Represents(BaseModel):
+  pass
+
+class Chamber(str, Enum):
+  HOUSE_OF_REPS = 'house'
+  SENATE = 'senate'
+
+class RollCall(BaseModel):
+  chamber: Chamber
+  congress: int
+  session: int
+  number: int
+  when: datetime
+  question: str
+
+class VotedOn(BaseModel):
+  vote: str
 

@@ -6,6 +6,7 @@ from typing import Iterator
 from .settings import Settings
 from .database import connect
 from .bioguide import insert_all_legislators
+from .house import scrape_house
 
 if __name__ == "__main__":
     settings = Settings.from_environs()
@@ -16,3 +17,5 @@ if __name__ == "__main__":
     driver = connect(settings)
 
     insert_all_legislators('/home/fred/Downloads/BioguideProfiles/*.json', driver)
+    # scrape_house(settings, driver)
+
