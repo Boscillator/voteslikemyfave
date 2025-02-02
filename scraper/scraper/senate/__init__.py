@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from itertools import islice
 from pprint import pprint
 from typing import List, Optional, Tuple, Iterator, no_type_check
 from urllib.request import urlopen
@@ -7,13 +8,12 @@ import xml.etree.ElementTree as ET
 import logging
 from datetime import datetime
 
-from neo4j import Driver
+from neo4j import Driver, Transaction
 
-import scraper.common as common
+import scraper.models as models
 
 from ..settings import Settings
 from .member_list import MemberList, fetch_member_list
-from ..database import insert_roll_calls_with_votes
 
 logger = logging.getLogger(__name__)
 
@@ -62,32 +62,6 @@ class Member:
     vote_cast: str
     lis_member_id: str
 
-    def to_common(
-        self, member_list: MemberList
-    ) -> Tuple[common.Legislator, common.Vote]:
-        try:
-            member_info = member_list.members[self.member_full]
-            bioguide_id = member_info.bioguide_id
-        except KeyError as e:
-            logger.warning('Unable to find "%s" in member list', self.member_full)
-            bioguide_id = f'unknown-{self.last_name}-{self.first_name}-{self.party}-{self.state}'
-
-        legislator = common.Legislator(
-            chamber=common.Chamber.SENATE,
-            last_name=self.last_name,
-            first_name=self.first_name,
-            party=common.Party(self.party),
-            state=self.state,
-            bioguide_id=bioguide_id,
-            senate_id=self.lis_member_id,
-        )
-        vote = common.Vote(vote=self.vote_cast)
-        return (legislator, vote)
-
-    @property
-    def full_name(self):
-        return f"{self.last_name} ({self.party}-{self.state})"
-
 
 @dataclass
 class RollCallVote:
@@ -109,20 +83,6 @@ class RollCallVote:
     count: Count
     tie_breaker: TieBreaker
     members: List[Member]
-
-    def to_common(self, member_list: MemberList) -> common.RollCallWithVotes:
-        roll_call = common.RollCall(
-            chamber=common.Chamber.SENATE,
-            congress=self.congress,
-            session=self.session,
-            number=self.vote_number,
-            when=self.vote_date,
-            question=self.question,
-        )
-
-        return common.RollCallWithVotes(
-            roll_call=roll_call, votes=[member.to_common(member_list) for member in self.members]
-        )
 
 
 @no_type_check # not going to type-check chat-gpt generated code
@@ -224,8 +184,8 @@ def scrape_single_senate_vote(
 ) -> RollCallVote:
     url = _construct_senate_url(settings.senate_url, congress, session, vote_number)
     with urlopen(url) as response:
-        raw: str= response.read()
-        if 'DOCTYPE html' in raw:
+        raw = response.read()
+        if b'DOCTYPE html' in raw:
             # Despite Al-Gore having invented the internet, the senate does not know what a 404 error is
             # we detect the error page and raise an exception
             raise VoteNoteFoundException("Unable to find vote")
@@ -233,9 +193,7 @@ def scrape_single_senate_vote(
         results = parse_roll_call_vote(raw)
         return results
 
-def scrape_senate_starting_at(settings: Settings, congress: int, session: int, vote_number: int) -> Iterator[common.RollCallWithVotes]:
-    member_list = fetch_member_list(settings)
-
+def scrape_senate_starting_at(settings: Settings, congress: int, session: int, vote_number: int) -> Iterator[RollCallVote]:
     error_indicates_empty = True
     num_votes = 0
     
@@ -243,7 +201,7 @@ def scrape_senate_starting_at(settings: Settings, congress: int, session: int, v
         try:
             logger.debug("Will attempt to scrape %d-%d-%d", congress, session, vote_number)
             result = scrape_single_senate_vote(settings, congress, session, vote_number)
-            yield result.to_common(member_list)
+            yield result
             error_indicates_empty = False
             vote_number += 1
             num_votes += 1
@@ -284,7 +242,57 @@ def find_resume_point_for_senate(settings: Settings, driver: Driver) -> Tuple[in
     last_vote = records[0].data()['rc']
     return last_vote['congress'], last_vote['session'], last_vote['number'] + 1
 
+def insert_single_vote(tx: Transaction, vote: RollCallVote):
+    roll_call_vote = models.RollCall(
+        chamber=models.Chamber.SENATE,
+        congress=vote.congress,
+        session=vote.session,
+        number=vote.vote_number,
+        when=vote.vote_date,
+        question=vote.question
+    )
+
+    query = """
+        MERGE (rc: RollCall {
+            chamber: $rc.chamber,
+            congress: $rc.congress,
+            session: $rc.session,
+            number: $rc.number
+        })
+        ON CREATE SET rc = $rc
+        MERGE (c: Congress { number: $rc.congress })
+        MERGE (rc)-[:DURING_CONGRESS]->(c)
+        """
+    tx.run(query, rc=roll_call_vote.model_dump(exclude_none=True))
+
+    for vote_cast in vote.members:
+        query = """
+        MATCH (l: Legislator)
+        WHERE l.unaccented_family_name = $family_name
+        MATCH (l)-[:REPRESENTS]->(:State{ code: $state})
+        , (l)-[:IS_MEMBER_OF_PARTY]->(:Party { abbreviation: $party })
+        , (l)-[:IS_MEMBER_OF_CONGRESS]->(:Congress { number: $congress })
+        LIMIT 1
+        MATCH (rc: RollCall {chamber: $rc.chamber, congress: $rc.congress, session: $rc.session, number: $rc.number})
+        MERGE (l)-[vote: VOTED_ON]->(rc)
+        ON CREATE SET vote = $voted
+        """
+        voted = models.VotedOn(vote=vote_cast.vote_cast)
+        tx.run(query,
+            family_name=vote_cast.last_name,
+            party=vote_cast.party,
+            state=vote_cast.state,
+            congress=roll_call_vote.congress, 
+            rc=roll_call_vote.model_dump(exclude_none=True),
+            voted=voted.model_dump(exclude_none=True))
+
+def insert_senate_votes(driver: Driver, votes: Iterator[RollCallVote]):
+    with driver.session() as session:
+        for rc_vote in votes:
+            session.execute_write(insert_single_vote, rc_vote)
+
+
 def scrape_senate(settings: Settings, driver: Driver):
     year, session, vote_number = find_resume_point_for_senate(settings, driver)
     votes = scrape_senate_starting_at(settings, year, session, vote_number)
-    insert_roll_calls_with_votes(driver, votes)
+    insert_senate_votes(driver, votes)

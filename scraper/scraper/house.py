@@ -234,7 +234,8 @@ def insert_single_vote(tx: Transaction, rc_vote: RollCallVote):
             number: $rc.number
         })
         ON CREATE SET rc = $rc
-        MERGE rc-[:DURING_CONGRESS]->(c: Congress {number: $rc.congress})
+        MERGE (c: Congress {number: $rc.congress})
+        MERGE (rc)-[:DURING_CONGRESS]->(c)
         """
     tx.run(query, rc=roll_call_vote.model_dump(exclude_none=True))
 
