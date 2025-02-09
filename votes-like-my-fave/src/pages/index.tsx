@@ -1,7 +1,7 @@
 import { CURRENT_CONGRESS, LegislatorSummary, list_legislators_by_congress } from "@/lib/database";
-import { GetStaticProps, InferGetServerSidePropsType } from "next";
+import { GetStaticProps, InferGetStaticPropsType } from "next";
 
-export default function Home({legislators}: InferGetServerSidePropsType<typeof getStaticProp>) {
+export default function Home({legislators}: InferGetStaticPropsType<typeof getStaticProps>) {
   return (
     <div>
       <h1>Hello World</h1>
