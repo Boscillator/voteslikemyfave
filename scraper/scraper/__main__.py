@@ -18,6 +18,6 @@ if __name__ == "__main__":
     driver = connect(settings)
 
     # insert_all_legislators('/home/fred/Downloads/BioguideProfiles/*.json', driver)
-    scrape_house(settings, driver)
+    # scrape_house(settings, driver)
     scrape_senate(settings, driver)
 

@@ -15,14 +15,6 @@ import scraper.models as models
 
 logger = logging.getLogger(__name__)
 
-def _remove_state_from_name(name: str) -> str:
-    """
-    "Sanders (VT)" -> "Sanders"
-    "Ocasio-Cortez" -> "Ocasio-Cortez"
-    """
-    return name.split(" (")[0]
-
-
 @dataclass
 class Legislator:
     name_id: str
@@ -242,12 +234,37 @@ def insert_single_vote(tx: Transaction, rc_vote: RollCallVote):
     for vote in rc_vote.vote_data:
         voted_on = models.VotedOn(vote=vote.vote)
         query = """
-        MATCH (leg: Legislator {bioguide_id: $bioguide_id})
-              , (rc: RollCall {chamber: $rc.chamber, congress: $rc.congress, session: $rc.session, number: $rc.number})
-        MERGE (leg)-[vote: VOTED_ON]->(rc)
-        ON CREATE SET vote = $vote
+            MATCH (leg: Legislator {bioguide_id: $bioguide_id})
+                , (rc: RollCall {chamber: $rc.chamber, congress: $rc.congress, session: $rc.session, number: $rc.number})
+            MERGE (leg)-[vote: VOTED_ON]->(rc)
+            ON CREATE SET vote = $vote
         """
         tx.run(query, bioguide_id = vote.legislator.name_id, rc = roll_call_vote.model_dump(exclude_none=True), vote=voted_on.model_dump(exclude_none=True))
+
+        # update state
+        query = """
+            MATCH (l: Legislator { bioguide_id: $bioguide_id})
+            MATCH (new_state: State { code: $state })
+            MERGE (l)-[:CURRENTLY_REPRESENTS]->(new_state)
+            WITH l, new_state
+            MATCH (l)-[old_rep: CURRENTLY_REPRESENTS]->(old_state: State)
+            WHERE old_state.code <> new_state.code
+            DELETE old_rep
+        """
+        tx.run(query, bioguide_id = vote.legislator.name_id, state=vote.legislator.state)
+
+
+        # update party
+        query = """
+            MATCH (l: Legislator { bioguide_id: $bioguide_id})
+            MATCH (new_party: Party { abbreviation: $party })
+            MERGE (l)-[:CURRENTLY_MEMBER_OF]->(new_party)
+            WITH l, new_party
+            MATCH (l)-[old_membership: CURRENTLY_MEMBER_OF]->(old_party: State)
+            WHERE old_party.abbreviation <> new_party.abbreviation
+            DELETE old_membership
+        """
+        tx.run(query, bioguide_id = vote.legislator.name_id, party=vote.legislator.party)
 
 def insert_house_votes(driver: Driver, votes: Iterator[RollCallVote]):
     with driver.session() as session:

@@ -276,15 +276,44 @@ def insert_single_vote(tx: Transaction, vote: RollCallVote):
         MATCH (rc: RollCall {chamber: $rc.chamber, congress: $rc.congress, session: $rc.session, number: $rc.number})
         MERGE (l)-[vote: VOTED_ON]->(rc)
         ON CREATE SET vote = $voted
+        RETURN l.bioguide_id as bioguide_id
         """
         voted = models.VotedOn(vote=vote_cast.vote_cast)
-        tx.run(query,
+        result = tx.run(query,
             family_name=vote_cast.last_name,
             party=vote_cast.party,
             state=vote_cast.state,
             congress=roll_call_vote.congress, 
             rc=roll_call_vote.model_dump(exclude_none=True),
             voted=voted.model_dump(exclude_none=True))
+        bioguide_id = result.single()['bioguide_id']
+
+
+        # update state
+        query = """
+            MATCH (l: Legislator { bioguide_id: $bioguide_id})
+            MATCH (new_state: State { code: $state })
+            MERGE (l)-[:CURRENTLY_REPRESENTS]->(new_state)
+            WITH l, new_state
+            MATCH (l)-[old_rep: CURRENTLY_REPRESENTS]->(old_state: State)
+            WHERE old_state.code <> new_state.code
+            DELETE old_rep
+        """
+        tx.run(query, bioguide_id = bioguide_id, state=vote_cast.state)
+
+
+        # update party
+        query = """
+            MATCH (l: Legislator { bioguide_id: $bioguide_id})
+            MATCH (new_party: Party { abbreviation: $party })
+            MERGE (l)-[:CURRENTLY_MEMBER_OF]->(new_party)
+            WITH l, new_party
+            MATCH (l)-[old_membership: CURRENTLY_MEMBER_OF]->(old_party: State)
+            WHERE old_party.abbreviation <> new_party.abbreviation
+            DELETE old_membership
+        """
+        tx.run(query, bioguide_id = bioguide_id, party=vote_cast.party)
+
 
 def insert_senate_votes(driver: Driver, votes: Iterator[RollCallVote]):
     with driver.session() as session:
