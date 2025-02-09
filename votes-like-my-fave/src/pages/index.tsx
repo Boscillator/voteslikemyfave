@@ -6,6 +6,26 @@ import React, { FormEvent } from "react";
 const NUM_SEARCH_RESULTS = 3;
 
 export default function Home({ legislators }: InferGetStaticPropsType<typeof getStaticProps>) {
+
+  return (
+    <div>
+      <div className="flex justify-center h-screen bg-gray-100">
+        <SearchBox legislators={legislators} />
+      </div>
+    </div>
+  );
+}
+
+export const getStaticProps = (async () => {
+  const legislators = await list_legislators_by_congress(CURRENT_CONGRESS);
+  return { props: { legislators } };
+}) satisfies GetStaticProps<{ legislators: LegislatorSummary[] }>
+
+interface SearchBoxProps {
+  legislators: LegislatorSummary[]
+}
+
+function SearchBox({legislators}: SearchBoxProps) {
   const [searchResults, setSearchResult] = React.useState(legislators.slice(0, NUM_SEARCH_RESULTS));
 
   const onSearchChange = (content: string) => {
@@ -30,23 +50,23 @@ export default function Home({ legislators }: InferGetStaticPropsType<typeof get
   );
 }
 
-export const getStaticProps = (async () => {
-  const legislators = await list_legislators_by_congress(CURRENT_CONGRESS);
-  return { props: { legislators } };
-}) satisfies GetStaticProps<{ legislators: LegislatorSummary[] }>
-
-interface SearchBoxProps {
+interface SearchBoxStyleProps {
   results: LegislatorSummary[],
   onSearchChange: (text: string) => void,
   onSubmit: (legislator: LegislatorSummary | undefined) => void
 }
 
-function SearchBox({ results, onSearchChange, onSubmit }: SearchBoxProps) {
+function SearchBoxStyle({ results, onSearchChange, onSubmit }: SearchBoxStyleProps) {
   const container: React.Ref<HTMLFormElement | null> = React.useRef(null);
   const [focused, setFocus] = React.useState(false);
 
-  const onFocus = () => setFocus(true);
-  const onBlur = () => setFocus(true);
+  const onFocus = () => {
+    setFocus(true);
+  }
+
+  const onBlur = () => {
+    setFocus(true);
+  }
 
   const onSubmitHandler = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +79,7 @@ function SearchBox({ results, onSearchChange, onSubmit }: SearchBoxProps) {
   }
 
   return (
-    <div className="relative w-full max-w-xl pt-40">
+    <div className="relative w-full max-w-xl pt-10">
       <form className="relative shadow-md" ref={container} onFocus={onFocus} onBlur={onBlur} onSubmit={onSubmitHandler}>
         <input
           type="text"
