@@ -8,8 +8,9 @@ const NUM_SEARCH_RESULTS = 3;
 export default function Home({ legislators }: InferGetStaticPropsType<typeof getStaticProps>) {
 
   return (
-    <div>
-      <div className="flex justify-center h-screen bg-gray-100">
+    <div className="bg-gray-100 h-screen">
+      <h1 className="text-center text-4xl pt-20">Who Votes Like My Fave?</h1>
+      <div className="flex justify-center">
         <SearchBox legislators={legislators} />
       </div>
     </div>
