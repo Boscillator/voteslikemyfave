@@ -286,8 +286,14 @@ def insert_single_vote(tx: Transaction, vote: RollCallVote):
             congress=roll_call_vote.congress, 
             rc=roll_call_vote.model_dump(exclude_none=True),
             voted=voted.model_dump(exclude_none=True))
-        bioguide_id = result.single()['bioguide_id']
 
+        row = result.single()
+
+        if row is None:
+            logger.error("Unable for find bioguide id for %s (%s-%s)", vote_cast.last_name, vote_cast.party, vote_cast.state)
+            continue
+
+        bioguide_id = row['bioguide_id']
 
         # update state
         query = """
