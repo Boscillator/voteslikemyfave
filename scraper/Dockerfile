@@ -11,6 +11,7 @@ WORKDIR /app
 # Install system dependencies for Poetry and other tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
+    nodejs \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

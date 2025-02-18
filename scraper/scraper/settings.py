@@ -9,12 +9,13 @@ DEFAULT_SENATE_MEMBER_URL = (
     "https://www.senate.gov/general/contact_information/senators_cfm.xml"
 )
 DEFAULT_SENATE_URL = "https://www.senate.gov/legislative/LIS/roll_call_votes"
+DEFAULT_BIOGUIDE_PATH = "/data/bioguide/BioguideProfiles"
 DEFAULT_CRAWL_DELAY_SECONDS = 0.4
 DEFAULT_NEO4J_URI = "neo4j://localhost:7687"
 DEFAULT_NEO4J_USERNAME = "neo4j"
 DEFAULT_RESUME_YEAR = 2025
 DEFAULT_RESUME_CONGRESS = 119
-DEFAULT_LOG_LEVEL = 'DEBUG'
+DEFAULT_LOG_LEVEL = 'INFO'
 
 @dataclass
 class Settings:
@@ -22,6 +23,7 @@ class Settings:
     crawl_delay_seconds: float
     senate_member_url: str
     senate_url: str
+    bioguide_path: str
     neo4j_uri: str
     neo4j_username: str
     neo4j_password: Optional[str]
@@ -37,6 +39,7 @@ class Settings:
                 f"{PREFIX}_SENATE_MEMBER_URL", DEFAULT_SENATE_MEMBER_URL
             ),
             senate_url=os.environ.get(f"{PREFIX}_SENATE_URL", DEFAULT_SENATE_URL),
+            bioguide_path=os.environ.get(f"{PREFIX}_BIOGUIDE_PATH", DEFAULT_BIOGUIDE_PATH),
             crawl_delay_seconds=float(
                 os.environ.get(
                     f"{PREFIX}_CRAWL_DELAY_SECONDS", DEFAULT_CRAWL_DELAY_SECONDS

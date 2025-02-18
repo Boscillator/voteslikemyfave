@@ -1,0 +1,7 @@
+{
+    "name": "Scraper",
+    "dockerComposeFile": ["../../compose.yaml", "../../compose.devcontainer.yaml"],
+    "service": "scraper",
+    "shutdownAction": "none",
+    "workspaceFolder": "/workspace/scraper"
+}

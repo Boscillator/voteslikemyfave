@@ -15,9 +15,10 @@ if __name__ == "__main__":
         level=settings.log_level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
+
     driver = connect(settings)
 
-    # insert_all_legislators('/home/fred/Downloads/BioguideProfiles/*.json', driver)
+    # insert_all_legislators(settings.bioguide_path + '/*.json', driver)
     # scrape_house(settings, driver)
     scrape_senate(settings, driver)
 

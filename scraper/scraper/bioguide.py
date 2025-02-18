@@ -1,14 +1,19 @@
 from __future__ import annotations
 import glob
 import json
+import urllib.request
 from pydantic import BaseModel, HttpUrl, ConfigDict
 from typing import List, Optional
 from datetime import datetime, date
 from enum import Enum
 from neo4j import Driver, Session, Transaction
 import logging
+import tempfile
+import urllib
+import zipfile
 
 import scraper.models as models
+from .settings import Settings
 
 logger = logging.getLogger(__name__)
 
@@ -268,3 +273,6 @@ def insert_all_legislators(glob_pattern: str, driver: Driver):
 
         for file in files:
             insert_bioguide_file(file, session)
+
+
+    
