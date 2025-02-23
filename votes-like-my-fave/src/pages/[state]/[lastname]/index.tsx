@@ -1,3 +1,4 @@
+import { SourceDisclaimer } from "@/components/legislator_utilities";
 import { LegislatorSimilarityTable } from "@/components/similarity_table";
 import { BIOGUIDE_PHOTO_ROOT, CURRENT_CONGRESS, get_legislator_by_congress_name_and_state, getSimilaritiesFor, LegislatorDetails, list_legislators_by_congress, SimilarityStatistics, VotePartySummaryForRepublicansAndDemocrats, votePartySummaryForRepublicansAndDemocrats } from "@/lib/database";
 import { ColorClassPrefix, partyToColorClass } from "@/lib/utilities";
@@ -48,6 +49,7 @@ export default function Legislator({ details, vote_summary, similarities }: Infe
         <LinearMeter label="Votes With Majority of Republicans" value={vote_summary.republican.votes_with} max={vote_summary.republican.total_votes} color="red" />
         <LinearMeter label="Votes With Majority of Democrats" value={vote_summary.democrat.votes_with} max={vote_summary.democrat.total_votes} color="blue" />
         <p className="text-xs"><b>Profile:</b> {legislator.profile_text}</p>
+        <SourceDisclaimer />
       </div>
     </div>
     <div>

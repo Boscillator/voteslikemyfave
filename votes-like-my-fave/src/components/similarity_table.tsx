@@ -9,8 +9,8 @@ export const LegislatorSimilarityTable: React.FC<{ data: SimilarityStatistics }>
           <tr>
             <th className="px-4 py-2 border">Image</th>
             <th className="px-4 py-2 border">Legislator</th>
-            <th className="px-4 py-2 border">Votes Together</th>
-            <th className="px-4 py-2 border">Votes Against</th>
+            <th className="px-4 py-2 border">Voted The Same As</th>
+            <th className="px-4 py-2 border">Votes Differently Than</th>
             <th className="px-4 py-2 border">% Agreement</th>
           </tr>
         </thead>
@@ -23,8 +23,8 @@ export const LegislatorSimilarityTable: React.FC<{ data: SimilarityStatistics }>
               <td className="px-4 py-2 border">
                 {item.other.family_name}, {item.other.given_name} ({item.other.state}-{item.other.party})
               </td>
-              <td className="px-4 py-2 border text-center">{item.votes_together}</td>
-              <td className="px-4 py-2 border text-center">{item.votes_against}</td>
+              <td className="px-4 py-2 border text-center">{item.votes_together} times</td>
+              <td className="px-4 py-2 border text-center">{item.votes_against} times</td>
               <td className="px-4 py-2 border text-center">{(100 * item.percent_agreement).toFixed(0)}%</td>
             </tr>
           ))}
