@@ -14,5 +14,10 @@ export default {
       },
     },
   },
+  safelist: [
+    "bg-red-900",
+    "bg-blue-900",
+    "bg-green-900"
+  ],
   plugins: [],
 } satisfies Config;

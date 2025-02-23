@@ -1,4 +1,5 @@
-import neo4j from 'neo4j-driver';
+import neo4j, { NotificationFilterMinimumSeverityLevel } from 'neo4j-driver';
+import { Legislator, Party, State } from './models';
 
 export const CURRENT_CONGRESS = parseInt(process.env.CURRENT_CONGRESS || '119');
 export const BIOGUIDE_PHOTO_ROOT = process.env.BIOGUIDE_PHOTO_ROOT || 'https://bioguide.congress.gov/photo/';
@@ -6,7 +7,7 @@ const neo4j_uri = process.env.NEO4J_URI || 'neo4j://database:7687';
 const neo4j_username = process.env.NEO4J_USER || 'neo4j';
 const neo4j_password = process.env.NEO4J_PASSWORD!;
 
-const driver = neo4j.driver(neo4j_uri, neo4j.auth.basic(neo4j_username, neo4j_password));
+const driver = neo4j.driver(neo4j_uri, neo4j.auth.basic(neo4j_username, neo4j_password), { disableLosslessIntegers: true });
 
 export type LegislatorSummary = {
   bioguide_id: string,
@@ -62,4 +63,51 @@ export async function get_legislator_by_congress_name_and_state(congress: number
   });
 
   return results.at(0);
+}
+
+export type VotePartySummary = {
+  votes_with: number,
+  votes_against: number,
+  total_votes: number,
+  percent_with: number
+};
+
+export async function voteSummaryByParty(bioguide_id: string, party_abbr: string): Promise<VotePartySummary | undefined> {
+  const query = `
+    MATCH (p: Party {abbreviation: $party_abbr})
+    MATCH (l: Legislator)-[:CURRENTLY_MEMBER_OF]->(p)
+    MATCH (l)-[vote:VOTED_ON]->(rc: RollCall)
+    WITH rc, vote.vote as vote, count(vote.vote) as vote_count
+    WITH rc, apoc.agg.maxItems(vote, vote_count) as max_data
+    MATCH (l: Legislator { bioguide_id: $bioguide_id })
+    MATCH (l)-[vote:VOTED_ON]->(rc)
+    WHERE vote.vote <> "Not Voting"
+    WITH l, sum(toInteger(vote.vote = max_data.items[0])) as votes_with, count(vote) as total_votes
+    RETURN votes_with
+        , total_votes
+        , toFloat(votes_with)/total_votes as percent_with
+        , total_votes - votes_with as votes_against
+    LIMIT 1
+  `;
+
+  const { records } = await driver.executeQuery(query, {bioguide_id, party_abbr});
+  const results = records.map(r => r.toObject() as VotePartySummary);
+  return results.at(0);
+}
+
+export type VotePartySummaryForRepublicansAndDemocrats = {
+  republican: VotePartySummary,
+  democrat: VotePartySummary
+};
+
+export async function votePartySummaryForRepublicansAndDemocrats(bioguide_id: string): Promise<VotePartySummaryForRepublicansAndDemocrats | undefined> {
+  const republicans_promise = voteSummaryByParty(bioguide_id, "R");
+  const democrat_promise = voteSummaryByParty(bioguide_id, "D");
+  const [republican, democrat] = await Promise.all([republicans_promise, democrat_promise]);
+
+  if(republican === undefined || democrat === undefined) {
+    return undefined;
+  }
+
+  return {republican, democrat};
 }

@@ -1,4 +1,4 @@
-interface Legislator {
+export interface Legislator {
   bioguide_id: string;
   family_name: string;
   given_name: string;
@@ -19,39 +19,39 @@ interface Legislator {
   death_date_unknown?: boolean;
 }
 
-interface IsRelatedTo {
+export interface IsRelatedTo {
   relationship_type: string;
 }
 
-interface Congress {
+export interface Congress {
   number: number;
   start_date?: string; // Date type in TypeScript can be string or Date
   end_date?: string;
 }
 
-interface IsMemberOfCongress {
+export interface IsMemberOfCongress {
   parties: string[];
 }
 
-interface Party {
+export interface Party {
   name: string;
   abbreviation?: string;
 }
 
-interface IsMemberOfParty {}
+export interface IsMemberOfParty {}
 
-interface State {
+export interface State {
   code: string;
 }
 
-interface Represents {}
+export interface Represents {}
 
-enum Chamber {
+export enum Chamber {
   HOUSE_OF_REPS = "house",
   SENATE = "senate"
 }
 
-interface RollCall {
+export interface RollCall {
   chamber: Chamber;
   congress: number;
   session: number;
@@ -60,6 +60,6 @@ interface RollCall {
   question: string;
 }
 
-interface VotedOn {
+export interface VotedOn {
   vote: string;
 }
