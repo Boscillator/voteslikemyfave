@@ -3,6 +3,7 @@ import { Legislator, Party, State } from './models';
 
 export const CURRENT_CONGRESS = parseInt(process.env.CURRENT_CONGRESS || '119');
 export const BIOGUIDE_PHOTO_ROOT = process.env.BIOGUIDE_PHOTO_ROOT || 'https://bioguide.congress.gov/photo/';
+export const MIN_VOTE_THRESHOLD = 20;
 const neo4j_uri = process.env.NEO4J_URI || 'neo4j://database:7687';
 const neo4j_username = process.env.NEO4J_USER || 'neo4j';
 const neo4j_password = process.env.NEO4J_PASSWORD!;
@@ -110,4 +111,64 @@ export async function votePartySummaryForRepublicansAndDemocrats(bioguide_id: st
   }
 
   return {republican, democrat};
+}
+
+export type LegislatorSimilarity = {
+  other: LegislatorSummary,
+  votes_together: number,
+  votes_against: number,
+  votes_total: number,
+  percent_agreement: number
+}
+
+export type SimilarityStatistics = {
+  similarity: LegislatorSimilarity[]
+};
+
+export async function getSimilaritiesFor(bioguide_id: string): Promise<SimilarityStatistics> {
+  const query = `
+    MATCH (l1: Legislator { bioguide_id: $bioguide_id })
+    MATCH (l1)-[v1:VOTED_ON]-(rc: RollCall)
+          , (l2)-[v2: VOTED_ON]-(rc)
+    WITH l2, sum(toInteger(v1.vote = v2.vote)) as votes_together, sum(toInteger(v1.vote <> v2.vote)) as votes_againsts
+    WITH *, votes_together + votes_againsts as votes_total
+    WITH *, toFloat(votes_together) / votes_total as percent_agreement
+    WHERE votes_total > $min_vote_threshold
+    MATCH (l2)-[:CURRENTLY_MEMBER_OF]-(p: Party)
+    MATCH (l2)-[:CURRENTLY_REPRESENTS]-(s: State)
+    RETURN l2.bioguide_id as bioguide_id
+          , l2.family_name as family_name
+          , l2.given_name as given_name
+          , l2.image as image
+          , p.abbreviation as party
+          , s.code as state
+          , votes_together
+          , votes_againsts
+          , votes_total
+          , percent_agreement
+    ORDER BY percent_agreement DESC
+  `;
+
+
+  const { records } = await driver.executeQuery(query, {bioguide_id, min_vote_threshold: MIN_VOTE_THRESHOLD});
+
+  const similarity = records.map(r => {
+    const obj = r.toObject();
+    return {
+      other: {
+        bioguide_id: obj.bioguide_id,
+        family_name: obj.family_name,
+        given_name: obj.given_name,
+        image: obj.image,
+        party: obj.party,
+        state: obj.state,
+      },
+      votes_together: obj.votes_together,
+      votes_against: obj.votes_againsts,
+      votes_total: obj.votes_total,
+      percent_agreement: obj.percent_agreement
+    }
+  });
+
+  return { similarity };
 }

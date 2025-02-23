@@ -1,4 +1,5 @@
-import { BIOGUIDE_PHOTO_ROOT, CURRENT_CONGRESS, get_legislator_by_congress_name_and_state, LegislatorDetails, list_legislators_by_congress, VotePartySummaryForRepublicansAndDemocrats, votePartySummaryForRepublicansAndDemocrats } from "@/lib/database";
+import { LegislatorSimilarityTable } from "@/components/similarity_table";
+import { BIOGUIDE_PHOTO_ROOT, CURRENT_CONGRESS, get_legislator_by_congress_name_and_state, getSimilaritiesFor, LegislatorDetails, list_legislators_by_congress, SimilarityStatistics, VotePartySummaryForRepublicansAndDemocrats, votePartySummaryForRepublicansAndDemocrats } from "@/lib/database";
 import { ColorClassPrefix, partyToColorClass } from "@/lib/utilities";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
 import { notFound } from "next/navigation";
@@ -11,7 +12,7 @@ type LinearMeterProps = {
   color: 'red' | 'blue'
 };
 
-const LinearMeter: React.FC<LinearMeterProps> = ({ label, value,  max, color}) => {
+const LinearMeter: React.FC<LinearMeterProps> = ({ label, value, max, color }) => {
   return (
     <div className="w-full">
       <label className="block text-sm font-medium text-gray-700 ">
@@ -22,15 +23,15 @@ const LinearMeter: React.FC<LinearMeterProps> = ({ label, value,  max, color}) =
           className={"h-full transition-all pl-4 bg-" + color + "-900"}
           style={{ width: `${(value / max) * 100}%` }}
         >
-        {value} / {max}
+          {value} / {max}
         </div>
       </div>
     </div>
   );
 };
 
-export default function Legislator({ details, vote_summary } : InferGetStaticPropsType<typeof getStaticProps>) {
-  if(details === undefined || vote_summary === undefined) {
+export default function Legislator({ details, vote_summary, similarities }: InferGetStaticPropsType<typeof getStaticProps>) {
+  if (details === undefined || vote_summary === undefined) {
     notFound();
   }
 
@@ -49,6 +50,9 @@ export default function Legislator({ details, vote_summary } : InferGetStaticPro
         <p className="text-xs"><b>Profile:</b> {legislator.profile_text}</p>
       </div>
     </div>
+    <div>
+      <LegislatorSimilarityTable data={similarities}/>
+    </div>
   </div>);
 }
 
@@ -59,16 +63,21 @@ export const getStaticProps = (async (context) => {
   const details = await get_legislator_by_congress_name_and_state(CURRENT_CONGRESS, last_name, state);
 
   if (details === undefined) {
-    return {props: {details: undefined, vote_summary: undefined}};
+    return { props: { details: undefined, vote_summary: undefined } };
   }
 
   const vote_summary = await votePartySummaryForRepublicansAndDemocrats(details.legislator.bioguide_id);
-  if(vote_summary === undefined) {
-    return {props: {details: details, vote_summary: undefined}};
+  if (vote_summary === undefined) {
+    return { props: { details: details, vote_summary: undefined } };
   }
-  
-  return { props: { details, vote_summary } };
-}) satisfies GetStaticProps<{ details: LegislatorDetails | undefined, vote_summary: VotePartySummaryForRepublicansAndDemocrats | undefined }>
+
+  const similarities = await getSimilaritiesFor(details.legislator.bioguide_id);
+
+  return { props: { details, vote_summary, similarities } };
+}) satisfies GetStaticProps<{ 
+  details: LegislatorDetails | undefined,
+  vote_summary: VotePartySummaryForRepublicansAndDemocrats | undefined,
+  similarities: SimilarityStatistics }>
 
 export const getStaticPaths = (async () => {
   const legislators = await list_legislators_by_congress(CURRENT_CONGRESS);
