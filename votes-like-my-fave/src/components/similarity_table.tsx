@@ -1,6 +1,5 @@
-import { BIOGUIDE_PHOTO_ROOT, SimilarityStatistics } from "@/lib/database";
+import { SimilarityStatistics } from "@/lib/database";
 import { LegislatorIcon, StyledLink } from "./legislator_utilities";
-import Link from "next/link";
 
 export const LegislatorSimilarityTable: React.FC<{ data: SimilarityStatistics }> = ({ data }) => {
   return (

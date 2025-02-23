@@ -13,6 +13,12 @@ export default {
         foreground: "var(--foreground)",
       },
     },
+    screens: {
+      'sm': '576px',
+      'md': '768px',
+      'lg': '992px',
+      'xl': '1200px',
+    },
   },
   safelist: [
     "bg-red-900",

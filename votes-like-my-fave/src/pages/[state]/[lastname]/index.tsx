@@ -43,7 +43,7 @@ export default function Legislator({ details, vote_summary, similarities }: Infe
     <div className={"rounded-t-lg p-2 " + partyToColorClass(ColorClassPrefix.bg, details.party)}>
       <h1 className="text-2xl text-white font-bold">{legislator.family_name}, {legislator.given_name} ({details.party.abbreviation}-{details.state.code})</h1>
     </div>
-    <div className="flex flex-row gap-4">
+    <div className="flex gap-4 flex-col md:flex-row items-center">
       <img className="m-4 min-w-[200px]" width="200" src={BIOGUIDE_PHOTO_ROOT + legislator.image} />
       <div className="p-4 space-y-4 flex-grow">
         <LinearMeter label="Votes With Majority of Republicans" value={vote_summary.republican.votes_with} max={vote_summary.republican.total_votes} color="red" />
