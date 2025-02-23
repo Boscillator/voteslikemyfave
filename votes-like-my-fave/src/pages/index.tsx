@@ -6,7 +6,6 @@ import React, { FormEvent } from "react";
 const NUM_SEARCH_RESULTS = 3;
 
 export default function Home({ legislators }: InferGetStaticPropsType<typeof getStaticProps>) {
-
   return (
     <div className="bg-gray-100 h-screen">
       <h1 className="text-center text-4xl pt-20">Who Votes Like My Fave?</h1>
@@ -26,7 +25,7 @@ interface SearchBoxProps {
   legislators: LegislatorSummary[]
 }
 
-function SearchBox({legislators}: SearchBoxProps) {
+function SearchBox({ legislators }: SearchBoxProps) {
   const [searchResults, setSearchResult] = React.useState(legislators.slice(0, NUM_SEARCH_RESULTS));
 
   const onSearchChange = (content: string) => {
@@ -43,10 +42,8 @@ function SearchBox({legislators}: SearchBoxProps) {
   }
 
   return (
-    <div>
-      {/* <div className="flex justify-center h-screen bg-gray-100"> */}
-        <SearchBox results={searchResults} onSearchChange={onSearchChange} onSubmit={onSubmit}/>
-      {/* </div> */}
+    <div className="flex w-full justify-center h-screen bg-gray-100">
+      <SearchBoxStyle results={searchResults} onSearchChange={onSearchChange} onSubmit={onSubmit} />
     </div>
   );
 }
@@ -81,11 +78,11 @@ function SearchBoxStyle({ results, onSearchChange, onSubmit }: SearchBoxStylePro
 
   return (
     <div className="relative w-full max-w-xl pt-10">
-      <form className="relative shadow-md" ref={container} onFocus={onFocus} onBlur={onBlur} onSubmit={onSubmitHandler}>
+      <form className="relative shadow-md group search-box" ref={container} onFocus={onFocus} onBlur={onBlur} onSubmit={onSubmitHandler}>
         <input
           type="text"
           placeholder="Search..."
-          className={"w-full p-3 pl-5 text-lg border focus:outline-none " + (focused ? "rounded-t-md" : "rounded-md")}
+          className={"w-full p-3 pl-5 text-lg border focus:outline-none"}
           onChange={(e) => onSearchChange(e.target.value)}
         />
 
@@ -93,15 +90,13 @@ function SearchBoxStyle({ results, onSearchChange, onSubmit }: SearchBoxStylePro
           <MagnifyingGlassIcon className="w-6 h-6" />
         </button>
 
-        {focused ?
-          <div className="absolute w-full border  bg-white rounded-b-md">
-            <ul className="divide-y divide-gray-200">
-              {results.map(r =>
-                <SearchResult key={r.bioguide_id} result={r} onResultSelect={onResultSelect} />
-              )}
-            </ul>
-          </div> : null
-        }
+        <div className="absolute group-focus-within:block hidden w-full border  bg-white rounded-b-md">
+          <ul className="divide-y divide-gray-200">
+            {results.map(r =>
+              <SearchResult key={r.bioguide_id} result={r} onResultSelect={onResultSelect} />
+            )}
+          </ul>
+        </div>
       </form>
     </div>
   );
@@ -112,7 +107,7 @@ interface SearchResultProps {
   onResultSelect: (legislator: LegislatorSummary) => void
 }
 
-function SearchResult({ result, onResultSelect}: SearchResultProps) {
+function SearchResult({ result, onResultSelect }: SearchResultProps) {
   const onClick = () => {
     onResultSelect(result);
   };

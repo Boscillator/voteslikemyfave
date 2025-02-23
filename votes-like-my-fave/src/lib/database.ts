@@ -24,5 +24,6 @@ export async function list_legislators_by_congress(congress:number): Promise<Leg
   `;
 
   const { records } = await driver.executeQuery(query, {congress});
-  return records.map(r => r.toObject() as LegislatorSummary);
+  const results = records.map(r => r.toObject() as LegislatorSummary);
+  return results;
 }
