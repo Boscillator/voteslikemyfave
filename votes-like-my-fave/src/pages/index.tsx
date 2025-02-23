@@ -1,4 +1,4 @@
-import { CURRENT_CONGRESS, LegislatorSummary, list_legislators_by_congress } from "@/lib/database";
+import { BIOGUIDE_PHOTO_ROOT, CURRENT_CONGRESS, LegislatorSummary, list_legislators_by_congress } from "@/lib/database";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import React, { FormEvent, Fragment } from "react";
@@ -108,8 +108,13 @@ function SearchResult({ result, onResultSelect }: SearchResultProps) {
     onResultSelect(result);
   };
 
+  const image_url = BIOGUIDE_PHOTO_ROOT + result.image;
+
   return <li className="hover:bg-gray-100 cursor-pointer">
-    <button type="button" className="w-full h-full p-3 pl-5 text-left" onClick={onClick}>{result.family_name}, {result.given_name} ({result.party}-{result.state})</button>
+    <button type="button" className="flex w-full h-full p-3 pl-5 text-left items-center gap-5" onClick={onClick}>
+      <img className="h-10 w-10 rounded-full" src={image_url} />
+      <div className="text-xl">{result.family_name}, {result.given_name} ({result.party}-{result.state})</div>
+    </button>
   </li>;
 }
 

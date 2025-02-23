@@ -1,4 +1,3 @@
-import { useRouter } from "next/router";
 import { CURRENT_CONGRESS, get_legislator_by_congress_name_and_state, list_legislators_by_congress } from "@/lib/database";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
 import { notFound } from "next/navigation";
