@@ -1,3 +1,11 @@
 services:
   scraper:
     command: sleep infinity
+    volumes:
+      - .:/workspace:cached
+  front-end:
+    command: sleep infinity
+    volumes:
+      - .:/workspace:cached
+    environment:
+      - NODE_ENV=development

@@ -23,9 +23,9 @@ export default function Home({ legislators }: InferGetStaticPropsType<typeof get
 
   return (
     <div>
-      <div className="flex justify-center h-screen bg-gray-100">
+      {/* <div className="flex justify-center h-screen bg-gray-100"> */}
         <SearchBox results={searchResults} onSearchChange={onSearchChange} onSubmit={onSubmit}/>
-      </div>
+      {/* </div> */}
     </div>
   );
 }

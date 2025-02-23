@@ -1,0 +1,7 @@
+{
+    "name": "Front End",
+    "dockerComposeFile": ["../../compose.yaml", "../../compose.devcontainer.yaml"],
+    "service": "front-end",
+    "shutdownAction": "none",
+    "workspaceFolder": "/workspace/votes-like-my-fave"
+}
