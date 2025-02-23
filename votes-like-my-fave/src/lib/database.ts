@@ -36,15 +36,30 @@ export async function list_legislators_by_congress(congress:number): Promise<Leg
   return results;
 }
 
-export async function get_legislator_by_congress_name_and_state(congress: number, family_name: string, state: string): Promise<Legislator | undefined> {
+export type LegislatorDetails = {
+  legislator: Legislator,
+  party: Party,
+  state: State
+};
+
+export async function get_legislator_by_congress_name_and_state(congress: number, family_name: string, state: string): Promise<LegislatorDetails | undefined> {
   const query = `
     MATCH (l: Legislator { family_name: $family_name})
-      , (l)-[:CURRENTLY_REPRESENTS]->(State { code: $state })
+      , (l)-[:CURRENTLY_REPRESENTS]->(s: State { code: $state })
       , (l)-[:IS_MEMBER_OF_CONGRESS]->(:Congress { number: $congress })
+      , (l)-[:CURRENTLY_MEMBER_OF]->(p: Party)
     LIMIT 1
-    RETURN l as legislator
+    RETURN l as legislator, p as party, s as state
   `;
   const { records } = await driver.executeQuery(query, {congress, family_name, state});
-  const results = records.map(r => r.toObject().legislator.properties as Legislator)
+  const results = records.map(r => {
+    const obj = r.toObject();
+    return {
+      legislator: obj.legislator.properties as Legislator,
+      party: obj.party.properties as Party,
+      state: obj.state.properties as State
+    }
+  });
+
   return results.at(0);
 }
