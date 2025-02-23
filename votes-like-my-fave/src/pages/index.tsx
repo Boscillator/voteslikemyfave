@@ -3,6 +3,7 @@ import { GetStaticProps, InferGetStaticPropsType } from "next";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 import React, { FormEvent, Fragment } from "react";
 import { useRouter } from "next/navigation";
+import { LegislatorIcon } from "@/components/legislator_utilities";
 
 const NUM_SEARCH_RESULTS = 3;
 
@@ -112,7 +113,7 @@ function SearchResult({ result, onResultSelect }: SearchResultProps) {
 
   return <li className="hover:bg-gray-100 cursor-pointer">
     <button type="button" className="flex w-full h-full p-3 pl-5 text-left items-center gap-5" onClick={onClick}>
-      <img className="h-10 w-10 rounded-full" src={image_url} />
+      <LegislatorIcon legislator={result} />
       <div className="text-xl">{result.family_name}, {result.given_name} ({result.party}-{result.state})</div>
     </button>
   </li>;

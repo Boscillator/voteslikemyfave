@@ -130,6 +130,7 @@ export async function getSimilaritiesFor(bioguide_id: string): Promise<Similarit
     MATCH (l1: Legislator { bioguide_id: $bioguide_id })
     MATCH (l1)-[v1:VOTED_ON]-(rc: RollCall)
           , (l2)-[v2: VOTED_ON]-(rc)
+    WHERE v1.vote <> "Not Voting" and v2.vote <> "Not Voting"
     WITH l2, sum(toInteger(v1.vote = v2.vote)) as votes_together, sum(toInteger(v1.vote <> v2.vote)) as votes_againsts
     WITH *, votes_together + votes_againsts as votes_total
     WITH *, toFloat(votes_together) / votes_total as percent_agreement

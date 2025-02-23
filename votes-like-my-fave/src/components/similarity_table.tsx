@@ -18,14 +18,14 @@ export const LegislatorSimilarityTable: React.FC<{ data: SimilarityStatistics }>
           {data.similarity.map((item) => (
             <tr key={item.other.bioguide_id} className="odd:bg-white even:bg-gray-50">
               <td className="px-4 py-2 border text-center">
-                <LegislatorIcon legislator={item.other} />
+                <LegislatorIcon legislator={item.other} center={true}/>
               </td>
               <td className="px-4 py-2 border">
                 {item.other.family_name}, {item.other.given_name} ({item.other.state}-{item.other.party})
               </td>
               <td className="px-4 py-2 border text-center">{item.votes_together}</td>
               <td className="px-4 py-2 border text-center">{item.votes_against}</td>
-              <td className="px-4 py-2 border text-center">{item.percent_agreement.toFixed(2)}%</td>
+              <td className="px-4 py-2 border text-center">{(100 * item.percent_agreement).toFixed(0)}%</td>
             </tr>
           ))}
         </tbody>
