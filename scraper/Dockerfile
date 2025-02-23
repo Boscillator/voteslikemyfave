@@ -32,4 +32,4 @@ RUN poetry config virtualenvs.create false \
 COPY . /app
 
 # Set the default command to run the application
-CMD ["python", "-m", "scraper"]
+CMD ["poetry", "run", "python", "-m", "scraper"]

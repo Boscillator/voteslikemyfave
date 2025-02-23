@@ -3,5 +3,13 @@
     "dockerComposeFile": ["../../compose.yaml", "../../compose.devcontainer.yaml"],
     "service": "scraper",
     "shutdownAction": "none",
-    "workspaceFolder": "/workspace/scraper"
+    "workspaceFolder": "/workspace/scraper",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.black-formatter",
+                "ms-python.python"
+            ]
+        }
+    }
 }

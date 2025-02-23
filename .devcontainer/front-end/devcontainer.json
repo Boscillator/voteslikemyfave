@@ -3,5 +3,12 @@
     "dockerComposeFile": ["../../compose.yaml", "../../compose.devcontainer.yaml"],
     "service": "front-end",
     "shutdownAction": "none",
-    "workspaceFolder": "/workspace/votes-like-my-fave"
+    "workspaceFolder": "/workspace/votes-like-my-fave",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "bradlc.vscode-tailwindcss"
+            ]
+        }
+    }
 }
