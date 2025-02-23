@@ -1,5 +1,6 @@
 import { BIOGUIDE_PHOTO_ROOT, SimilarityStatistics } from "@/lib/database";
-import { LegislatorIcon } from "./legislator_utilities";
+import { LegislatorIcon, StyledLink } from "./legislator_utilities";
+import Link from "next/link";
 
 export const LegislatorSimilarityTable: React.FC<{ data: SimilarityStatistics }> = ({ data }) => {
   return (
@@ -21,7 +22,7 @@ export const LegislatorSimilarityTable: React.FC<{ data: SimilarityStatistics }>
                 <LegislatorIcon legislator={item.other} center={true}/>
               </td>
               <td className="px-4 py-2 border">
-                {item.other.family_name}, {item.other.given_name} ({item.other.state}-{item.other.party})
+                <StyledLink href={"/" + item.other.state + "/" + item.other.family_name}> {item.other.family_name}, {item.other.given_name} ({item.other.state}-{item.other.party})</StyledLink>
               </td>
               <td className="px-4 py-2 border text-center">{item.votes_together} times</td>
               <td className="px-4 py-2 border text-center">{item.votes_against} times</td>

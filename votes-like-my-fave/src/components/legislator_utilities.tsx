@@ -1,5 +1,7 @@
 import { BIOGUIDE_PHOTO_ROOT, LegislatorSummary } from "@/lib/database";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/solid";
+import Link from "next/link";
+import { ReactNode } from "react";
 
 export type LegislatorIconProps = {
   legislator: LegislatorSummary,
@@ -13,6 +15,13 @@ export function LegislatorIcon({ legislator, center}: LegislatorIconProps) {
     alt={`${legislator.given_name} ${legislator.family_name}`}
     className={"w-12 h-12 rounded-full object-fit-none " + centerClass}
   />
+}
+
+export function StyledLink({href, children, additionalClasses, gray}: {href: string, children: ReactNode, additionalClasses?: string, gray?: number}) {
+  gray = gray || 700;
+  return (
+    <Link className={"inline underline hover:text-gray-" + gray + " " + additionalClasses} href={href}>{children}</Link>
+  );
 }
 
 export function ExternalLink({ text, href, gray}: { text: string; href: string; gray?: number; }) {

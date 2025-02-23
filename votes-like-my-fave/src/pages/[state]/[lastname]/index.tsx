@@ -32,7 +32,7 @@ const LinearMeter: React.FC<LinearMeterProps> = ({ label, value, max, color }) =
 };
 
 export default function Legislator({ details, vote_summary, similarities }: InferGetStaticPropsType<typeof getStaticProps>) {
-  if (details === undefined || vote_summary === undefined) {
+  if (details === undefined || vote_summary === undefined || similarities == undefined) {
     notFound();
   }
 
@@ -79,7 +79,7 @@ export const getStaticProps = (async (context) => {
 }) satisfies GetStaticProps<{ 
   details: LegislatorDetails | undefined,
   vote_summary: VotePartySummaryForRepublicansAndDemocrats | undefined,
-  similarities: SimilarityStatistics }>
+  similarities?: SimilarityStatistics }>
 
 export const getStaticPaths = (async () => {
   const legislators = await list_legislators_by_congress(CURRENT_CONGRESS);
