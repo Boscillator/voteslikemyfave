@@ -1,6 +1,7 @@
 from __future__ import annotations
 import glob
 import json
+import os
 import urllib.request
 from pydantic import BaseModel, HttpUrl, ConfigDict
 from typing import List, Optional
@@ -135,6 +136,12 @@ class BioguideEntry(BaseModel):
     data: PoliticianData
 
 def insert_bioguide_entry(tx: Transaction, entry: BioguideEntry):
+    if len(entry.data.image) != 0 and entry.data.image[0].contentUrl is not None:
+        image_path = entry.data.image[0].contentUrl
+        image = os.path.basename(image_path)
+    else:
+        image = None
+
     legislator = models.Legislator(
         bioguide_id=entry.data.usCongressBioId,
         family_name=entry.data.familyName,
@@ -142,6 +149,7 @@ def insert_bioguide_entry(tx: Transaction, entry: BioguideEntry):
         unaccented_family_name=entry.data.unaccentedFamilyName,
         unaccented_given_name=entry.data.unaccentedGivenName,
         profile_text=entry.data.profileText,
+        image=image,
         middle_name=entry.data.middleName,
         unaccented_middle_name=entry.data.unaccentedMiddleName,
         nick_name=entry.data.nickName,

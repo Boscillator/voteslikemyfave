@@ -1,18 +1,18 @@
 import { CURRENT_CONGRESS, LegislatorSummary, list_legislators_by_congress } from "@/lib/database";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
-import React, { FormEvent } from "react";
+import React, { FormEvent, Fragment } from "react";
+import { useRouter } from "next/navigation";
 
 const NUM_SEARCH_RESULTS = 3;
 
 export default function Home({ legislators }: InferGetStaticPropsType<typeof getStaticProps>) {
   return (
-    <div className="bg-gray-100 h-screen">
-      <h1 className="text-center text-4xl pt-20">Who Votes Like My Fave?</h1>
+    <Fragment>
       <div className="flex justify-center">
         <SearchBox legislators={legislators} />
       </div>
-    </div>
+    </Fragment>
   );
 }
 
@@ -27,6 +27,7 @@ interface SearchBoxProps {
 
 function SearchBox({ legislators }: SearchBoxProps) {
   const [searchResults, setSearchResult] = React.useState(legislators.slice(0, NUM_SEARCH_RESULTS));
+  const router = useRouter();
 
   const onSearchChange = (content: string) => {
     const normalizedContent = content.toLowerCase();
@@ -38,7 +39,12 @@ function SearchBox({ legislators }: SearchBoxProps) {
   };
 
   const onSubmit = (legislator: LegislatorSummary | undefined) => {
-    console.log(legislator);
+    if (legislator === undefined) {
+      return;
+    }
+
+    const path = `/${legislator.state}/${legislator.family_name}`
+    router.push(path);
   }
 
   return (
@@ -56,19 +62,9 @@ interface SearchBoxStyleProps {
 
 function SearchBoxStyle({ results, onSearchChange, onSubmit }: SearchBoxStyleProps) {
   const container: React.Ref<HTMLFormElement | null> = React.useRef(null);
-  const [focused, setFocus] = React.useState(false);
-
-  const onFocus = () => {
-    setFocus(true);
-  }
-
-  const onBlur = () => {
-    setFocus(true);
-  }
 
   const onSubmitHandler = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submit");
     onSubmit(results.at(0));
   };
 
@@ -78,7 +74,7 @@ function SearchBoxStyle({ results, onSearchChange, onSubmit }: SearchBoxStylePro
 
   return (
     <div className="relative w-full max-w-xl pt-10">
-      <form className="relative shadow-md group search-box" ref={container} onFocus={onFocus} onBlur={onBlur} onSubmit={onSubmitHandler}>
+      <form className="relative shadow-md group search-box" ref={container} onSubmit={onSubmitHandler}>
         <input
           type="text"
           placeholder="Search..."

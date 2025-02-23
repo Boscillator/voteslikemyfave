@@ -10,6 +10,7 @@ class Legislator(BaseModel):
   unaccented_family_name: str
   unaccented_given_name: str
   profile_text: str
+  image: Optional[str] = None
   middle_name: Optional[str] = None
   unaccented_middle_name: Optional[str] = None
   nick_name: Optional[str] = None
