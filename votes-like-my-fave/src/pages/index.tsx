@@ -9,11 +9,9 @@ const NUM_SEARCH_RESULTS = 3;
 
 export default function Home({ legislators }: InferGetStaticPropsType<typeof getStaticProps>) {
   return (
-    <Fragment>
-      <div className="flex justify-center">
-        <SearchBox legislators={legislators} />
-      </div>
-    </Fragment>
+    <div className="flex justify-center">
+      <SearchBox legislators={legislators} />
+    </div>
   );
 }
 
@@ -49,7 +47,7 @@ function SearchBox({ legislators }: SearchBoxProps) {
   }
 
   return (
-    <div className="flex w-full justify-center h-screen bg-gray-100">
+    <div className="flex w-full justify-center bg-gray-100">
       <SearchBoxStyle results={searchResults} onSearchChange={onSearchChange} onSubmit={onSubmit} />
     </div>
   );
