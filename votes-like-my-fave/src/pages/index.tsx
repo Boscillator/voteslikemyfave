@@ -1,9 +1,9 @@
-import { BIOGUIDE_PHOTO_ROOT, CURRENT_CONGRESS, LegislatorSummary, list_legislators_by_congress } from "@/lib/database";
+import {  CURRENT_CONGRESS, LegislatorSummary, list_legislators_by_congress } from "@/lib/database";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/solid";
-import React, { FormEvent, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { LegislatorIcon } from "@/components/legislator_utilities";
+import React from "react";
 
 const NUM_SEARCH_RESULTS = 3;
 
@@ -106,8 +106,6 @@ function SearchResult({ result, onResultSelect }: SearchResultProps) {
   const onClick = () => {
     onResultSelect(result);
   };
-
-  const image_url = BIOGUIDE_PHOTO_ROOT + result.image;
 
   return <li className="hover:bg-gray-100 cursor-pointer">
     <button type="button" className="flex w-full h-full p-3 pl-5 text-left items-center gap-5" onClick={onClick}>

@@ -1,5 +1,5 @@
 import React from "react";
-import { ExternalLink, SourceDisclaimer } from "./legislator_utilities";
+import { ExternalLink } from "./legislator_utilities";
 
 const Footer = () => {
   return (

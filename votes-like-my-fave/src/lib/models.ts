@@ -38,13 +38,17 @@ export interface Party {
   abbreviation?: string;
 }
 
-export interface IsMemberOfParty {}
+export interface IsMemberOfParty {
+  // Place holder for when attributes are added
+}
 
 export interface State {
   code: string;
 }
 
-export interface Represents {}
+export interface Represents {
+  // Place holder for when attributes are added
+}
 
 export enum Chamber {
   HOUSE_OF_REPS = "house",

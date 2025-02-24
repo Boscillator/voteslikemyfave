@@ -2,8 +2,8 @@ import { SourceDisclaimer } from "@/components/legislator_utilities";
 import { LegislatorSimilarityTable } from "@/components/similarity_table";
 import { BIOGUIDE_PHOTO_ROOT, CURRENT_CONGRESS, get_legislator_by_congress_name_and_state, getSimilaritiesFor, LegislatorDetails, list_legislators_by_congress, SimilarityStatistics, VotePartySummaryForRepublicansAndDemocrats, votePartySummaryForRepublicansAndDemocrats } from "@/lib/database";
 import { ColorClassPrefix, partyToColorClass } from "@/lib/utilities";
+import Custom404 from "@/pages/404";
 import { GetStaticProps, InferGetStaticPropsType } from "next";
-import { notFound } from "next/navigation";
 import React from "react";
 
 type LinearMeterProps = {
@@ -33,7 +33,7 @@ const LinearMeter: React.FC<LinearMeterProps> = ({ label, value, max, color }) =
 
 export default function Legislator({ details, vote_summary, similarities }: InferGetStaticPropsType<typeof getStaticProps>) {
   if (details === undefined || vote_summary === undefined || similarities == undefined) {
-    notFound();
+    return <Custom404 />
   }
 
   const legislator = details.legislator;
@@ -44,7 +44,7 @@ export default function Legislator({ details, vote_summary, similarities }: Infe
       <h1 className="text-2xl text-white font-bold">{legislator.family_name}, {legislator.given_name} ({details.party.abbreviation}-{details.state.code})</h1>
     </div>
     <div className="flex gap-4 flex-col md:flex-row items-center">
-      <img className="m-4 min-w-[200px]" width="200" src={BIOGUIDE_PHOTO_ROOT + legislator.image} />
+      <img className="m-4 min-w-[200px]" width="200" src={BIOGUIDE_PHOTO_ROOT + legislator.image} alt={`${legislator.family_name} (${details.party.abbreviation}-${details.state.code})`} />
       <div className="p-4 space-y-4 flex-grow">
         <LinearMeter label="Votes With Majority of Republicans" value={vote_summary.republican.votes_with} max={vote_summary.republican.total_votes} color="red" />
         <LinearMeter label="Votes With Majority of Democrats" value={vote_summary.democrat.votes_with} max={vote_summary.democrat.total_votes} color="blue" />
@@ -53,7 +53,7 @@ export default function Legislator({ details, vote_summary, similarities }: Infe
       </div>
     </div>
     <div>
-      <LegislatorSimilarityTable data={similarities}/>
+      <LegislatorSimilarityTable data={similarities} />
     </div>
   </div>);
 }
@@ -65,21 +65,22 @@ export const getStaticProps = (async (context) => {
   const details = await get_legislator_by_congress_name_and_state(CURRENT_CONGRESS, last_name, state);
 
   if (details === undefined) {
-    return { props: { details: undefined, vote_summary: undefined } };
+    return { props: {} };
   }
 
   const vote_summary = await votePartySummaryForRepublicansAndDemocrats(details.legislator.bioguide_id);
   if (vote_summary === undefined) {
-    return { props: { details: details, vote_summary: undefined } };
+    return { props: {} };
   }
 
   const similarities = await getSimilaritiesFor(details.legislator.bioguide_id);
 
   return { props: { details, vote_summary, similarities } };
-}) satisfies GetStaticProps<{ 
-  details: LegislatorDetails | undefined,
-  vote_summary: VotePartySummaryForRepublicansAndDemocrats | undefined,
-  similarities?: SimilarityStatistics }>
+}) satisfies GetStaticProps<{
+  details?: LegislatorDetails,
+  vote_summary?: VotePartySummaryForRepublicansAndDemocrats,
+  similarities?: SimilarityStatistics
+}>
 
 export const getStaticPaths = (async () => {
   const legislators = await list_legislators_by_congress(CURRENT_CONGRESS);

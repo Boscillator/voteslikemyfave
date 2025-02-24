@@ -1,4 +1,4 @@
-import neo4j, { NotificationFilterMinimumSeverityLevel } from 'neo4j-driver';
+import neo4j from 'neo4j-driver';
 import { Legislator, Party, State } from './models';
 
 export const CURRENT_CONGRESS = parseInt(process.env.CURRENT_CONGRESS || '119');
